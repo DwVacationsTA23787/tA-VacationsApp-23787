@@ -8,8 +8,13 @@ namespace Dw23787.Models
 
         [Key] // Identifica que é o atributo será PK
         public int MessageId { get; set; }
+        
+        public string MessageTitle { get; set; }
 
-        public string Message { get; set; }
+        public string Description { get; init; }
+
+        public string? Photo { get; init; } // o '?' vai tornar o atributo em preenchimento facultativo
+
 
 
         // relacionamento 1-N
