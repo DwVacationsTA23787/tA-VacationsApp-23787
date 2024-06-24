@@ -4,6 +4,13 @@ namespace Dw23787.Models
 {
     public class Users
     {
+
+        public Users()
+        {
+            TripList = new HashSet<Trips>();
+            MessagesList = new HashSet<Messages>();
+        }
+
         [Key] // Identifica que é o atributo será PK
         public int Id { get; set; }
         public string Name { get; set; }
@@ -24,6 +31,12 @@ namespace Dw23787.Models
         /// e a tabela da Autenticação
         /// </summary>
         public string UserID { get; set; }
+
+
+        public ICollection<Trips> TripList { get; set; }
+
+        public ICollection<Messages> MessagesList { get; set; }
+
 
 
     }
