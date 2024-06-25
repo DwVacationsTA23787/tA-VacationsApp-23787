@@ -12,15 +12,17 @@ namespace Dw23787.Models
 
         public string Description { get; set; }
 
-        public string Category { get; set;}
+        public TripCategory Category { get; set;}
 
-        public string Transport { get; set;}
+        public TripTransport Transport { get; set;}
 
         public string InicialBudget { get; set;}
 
         public string FinalBudget { get; set;}
 
         public string? Banner { get; set; } // o '?' vai tornar o atributo em preenchimento facultativo
+
+        public Boolean closed { get; set; }
 
 
         // relacionamento 1-N
@@ -42,6 +44,25 @@ namespace Dw23787.Models
         [ForeignKey(nameof(User))]
         public int UserFK { get; set; }
         public Users User { get; set; }
+
+
+        public enum TripCategory
+        {
+            Adventure,
+            Leisure,
+            Cultural,
+            Business,
+            Family
+        }
+
+
+        public enum TripTransport
+        {
+            Plane,
+            Bus,
+            Train,
+            Hitchhiking
+        }
 
     }
 }
