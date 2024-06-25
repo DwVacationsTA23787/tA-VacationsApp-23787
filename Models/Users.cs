@@ -25,6 +25,8 @@ namespace Dw23787.Models
 
         public string Phone { get; set; }
 
+        public string? ProfilePicture { get; set; }
+
 
         /// <summary>
         /// atributo para funcionar como FK entre a tabela dos Utilizadores
