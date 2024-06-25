@@ -50,7 +50,7 @@ namespace Dw23787.Controllers
         public IActionResult Create()
         {
             ViewData["GroupFK"] = new SelectList(_context.Groups, "GroupId", "GroupId");
-            ViewData["UserFK"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["UserFK"] = new SelectList(_context.UsersApp, "Id", "Id");
             return View();
         }
 
@@ -59,7 +59,7 @@ namespace Dw23787.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,TripName,Description,Category,Transport,InicialBudget,FinalBudget,Banner,GroupFK,UserFK")] Trips trips)
+        public async Task<IActionResult> Create([Bind("Id,TripName,Description,Category,Transport,InicialBudget,FinalBudget,Banner,closed,GroupFK,UserFK")] Trips trips)
         {
             if (ModelState.IsValid)
             {
@@ -68,7 +68,7 @@ namespace Dw23787.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["GroupFK"] = new SelectList(_context.Groups, "GroupId", "GroupId", trips.GroupFK);
-            ViewData["UserFK"] = new SelectList(_context.Users, "Id", "Id", trips.UserFK);
+            ViewData["UserFK"] = new SelectList(_context.UsersApp, "Id", "Id", trips.UserFK);
             return View(trips);
         }
 
@@ -86,7 +86,7 @@ namespace Dw23787.Controllers
                 return NotFound();
             }
             ViewData["GroupFK"] = new SelectList(_context.Groups, "GroupId", "GroupId", trips.GroupFK);
-            ViewData["UserFK"] = new SelectList(_context.Users, "Id", "Id", trips.UserFK);
+            ViewData["UserFK"] = new SelectList(_context.UsersApp, "Id", "Id", trips.UserFK);
             return View(trips);
         }
 
@@ -95,7 +95,7 @@ namespace Dw23787.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,TripName,Description,Category,Transport,InicialBudget,FinalBudget,Banner,GroupFK,UserFK")] Trips trips)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,TripName,Description,Category,Transport,InicialBudget,FinalBudget,Banner,closed,GroupFK,UserFK")] Trips trips)
         {
             if (id != trips.Id)
             {
@@ -123,7 +123,7 @@ namespace Dw23787.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["GroupFK"] = new SelectList(_context.Groups, "GroupId", "GroupId", trips.GroupFK);
-            ViewData["UserFK"] = new SelectList(_context.Users, "Id", "Id", trips.UserFK);
+            ViewData["UserFK"] = new SelectList(_context.UsersApp, "Id", "Id", trips.UserFK);
             return View(trips);
         }
 

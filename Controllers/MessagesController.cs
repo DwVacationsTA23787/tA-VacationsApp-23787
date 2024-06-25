@@ -50,7 +50,7 @@ namespace Dw23787.Controllers
         public IActionResult Create()
         {
             ViewData["GroupFK"] = new SelectList(_context.Groups, "GroupId", "GroupId");
-            ViewData["UserFK"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["UserFK"] = new SelectList(_context.UsersApp, "Id", "Id");
             return View();
         }
 
@@ -59,7 +59,7 @@ namespace Dw23787.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("MessageId,Message,GroupFK,UserFK")] Messages messages)
+        public async Task<IActionResult> Create([Bind("MessageId,MessageTitle,Description,Photo,GroupFK,UserFK")] Messages messages)
         {
             if (ModelState.IsValid)
             {
@@ -68,7 +68,7 @@ namespace Dw23787.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["GroupFK"] = new SelectList(_context.Groups, "GroupId", "GroupId", messages.GroupFK);
-            ViewData["UserFK"] = new SelectList(_context.Users, "Id", "Id", messages.UserFK);
+            ViewData["UserFK"] = new SelectList(_context.UsersApp, "Id", "Id", messages.UserFK);
             return View(messages);
         }
 
@@ -86,7 +86,7 @@ namespace Dw23787.Controllers
                 return NotFound();
             }
             ViewData["GroupFK"] = new SelectList(_context.Groups, "GroupId", "GroupId", messages.GroupFK);
-            ViewData["UserFK"] = new SelectList(_context.Users, "Id", "Id", messages.UserFK);
+            ViewData["UserFK"] = new SelectList(_context.UsersApp, "Id", "Id", messages.UserFK);
             return View(messages);
         }
 
@@ -95,7 +95,7 @@ namespace Dw23787.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("MessageId,Message,GroupFK,UserFK")] Messages messages)
+        public async Task<IActionResult> Edit(int id, [Bind("MessageId,MessageTitle,Description,Photo,GroupFK,UserFK")] Messages messages)
         {
             if (id != messages.MessageId)
             {
@@ -123,7 +123,7 @@ namespace Dw23787.Controllers
                 return RedirectToAction(nameof(Index));
             }
             ViewData["GroupFK"] = new SelectList(_context.Groups, "GroupId", "GroupId", messages.GroupFK);
-            ViewData["UserFK"] = new SelectList(_context.Users, "Id", "Id", messages.UserFK);
+            ViewData["UserFK"] = new SelectList(_context.UsersApp, "Id", "Id", messages.UserFK);
             return View(messages);
         }
 

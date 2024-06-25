@@ -22,7 +22,7 @@ namespace Dw23787.Controllers
         // GET: Users
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Users.ToListAsync());
+            return View(await _context.UsersApp.ToListAsync());
         }
 
         // GET: Users/Details/5
@@ -33,7 +33,7 @@ namespace Dw23787.Controllers
                 return NotFound();
             }
 
-            var users = await _context.Users
+            var users = await _context.UsersApp
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (users == null)
             {
@@ -54,7 +54,7 @@ namespace Dw23787.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Email,DataNascimento,Age,Gender,Phone,UserID")] Users users)
+        public async Task<IActionResult> Create([Bind("Id,Name,Email,DataNascimento,Age,Gender,Phone,ProfilePicture,UserID")] Users users)
         {
             if (ModelState.IsValid)
             {
@@ -73,7 +73,7 @@ namespace Dw23787.Controllers
                 return NotFound();
             }
 
-            var users = await _context.Users.FindAsync(id);
+            var users = await _context.UsersApp.FindAsync(id);
             if (users == null)
             {
                 return NotFound();
@@ -86,7 +86,7 @@ namespace Dw23787.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Email,DataNascimento,Age,Gender,Phone,UserID")] Users users)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Email,DataNascimento,Age,Gender,Phone,ProfilePicture,UserID")] Users users)
         {
             if (id != users.Id)
             {
@@ -124,7 +124,7 @@ namespace Dw23787.Controllers
                 return NotFound();
             }
 
-            var users = await _context.Users
+            var users = await _context.UsersApp
                 .FirstOrDefaultAsync(m => m.Id == id);
             if (users == null)
             {
@@ -139,10 +139,10 @@ namespace Dw23787.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var users = await _context.Users.FindAsync(id);
+            var users = await _context.UsersApp.FindAsync(id);
             if (users != null)
             {
-                _context.Users.Remove(users);
+                _context.UsersApp.Remove(users);
             }
 
             await _context.SaveChangesAsync();
@@ -151,7 +151,7 @@ namespace Dw23787.Controllers
 
         private bool UsersExists(int id)
         {
-            return _context.Users.Any(e => e.Id == id);
+            return _context.UsersApp.Any(e => e.Id == id);
         }
     }
 }

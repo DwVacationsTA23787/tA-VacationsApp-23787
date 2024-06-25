@@ -21,7 +21,7 @@ namespace Dw23787.Data
         * definir as 'tabelas' da base de dados
         * ******************************************** */
 
-        public DbSet<Users> Users { get; set; }
+        public DbSet<Users> UsersApp { get; set; }
         public DbSet<Trips> Trips { get; set; }
         public DbSet<Messages> Messages { get; set; }
         public DbSet<Groups> Groups { get; set; }
