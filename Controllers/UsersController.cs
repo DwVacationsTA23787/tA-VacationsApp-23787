@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Dw23787.Data;
 using Dw23787.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Dw23787.Controllers
 {
+    [Authorize]
     public class UsersController : Controller
     {
         private readonly ApplicationDbContext _context;
