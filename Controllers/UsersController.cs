@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Dw23787.Controllers
 {
+
     [Authorize]
     public class UsersController : Controller
     {
@@ -56,7 +57,7 @@ namespace Dw23787.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name,Email,DataNascimento,Age,Gender,Phone,ProfilePicture,UserID")] Users users)
+        public async Task<IActionResult> Create([Bind("Id,Name,Email,DataNascimento,Age,Gender,Phone,ProfilePicture,UserID,Password")] Users users)
         {
             if (ModelState.IsValid)
             {
@@ -88,7 +89,7 @@ namespace Dw23787.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Email,DataNascimento,Age,Gender,Phone,ProfilePicture,UserID")] Users users)
+        public async Task<IActionResult> Edit(int id, [Bind("Id,Name,Email,DataNascimento,Age,Gender,Phone,ProfilePicture,UserID,Password")] Users users)
         {
             if (id != users.Id)
             {

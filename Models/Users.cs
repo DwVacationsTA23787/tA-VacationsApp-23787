@@ -28,18 +28,21 @@ namespace Dw23787.Models
         public string? ProfilePicture { get; set; }
 
 
+
+
         /// <summary>
         /// atributo para funcionar como FK entre a tabela dos Utilizadores
         /// e a tabela da Autenticação
         /// </summary>
         public string UserID { get; set; }
 
+        /// <summary>
+        /// Este atributo vai servir para a parte do professor joao
+        /// </summary>
+        public string Password { get; set; }
 
         public ICollection<Trips> TripList { get; set; }
 
         public ICollection<Messages> MessagesList { get; set; }
-
-
-
     }
 }

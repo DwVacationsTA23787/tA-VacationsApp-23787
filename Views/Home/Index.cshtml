@@ -2,7 +2,50 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+
+<!-- Begining of Hero Section -->
+<div class="container-fluid position-relative d-flex justify-content-center align-items-center"
+     style="background-image: url('/images/secondTry.jpg'); background-size: cover; background-position: center; height: 100vh; max-height: 600px; overflow: hidden;">
+    <div class="d-flex flex-column align-items-center">
+        <div class="text-center text-white">
+            <p class="display-3 fw-bold">
+                <span class="me-2">DO YOU</span>
+                <span>WANNA</span>
+            </p>
+            <p class="mt-3 fs-6">everything you can imagine, is here</p>
+            <p class="fs-5">JUMP IN MY RIDE?</p>
+        </div>
+
+        <button class="rounded-circle bg-transparent border-0 shadow-none"
+                style="outline: 2px solid white; outline-offset: 2px;">
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e8eaed">
+                <path d="M480-344 240-584l56-56 184 184 184-184 56 56-240 240Z" />
+            </svg>
+        </button>
+    </div>
 </div>
+<!-- End of Hero Section -->
+
+<!-- Begining Of Counters section-->
+<div class="container" style="z-index: 10; position: relative; margin-top: -50px; background-color: white; border-radius: 15px;">
+    <div class="container-fluid" style="padding: 50px 0; text-align: center; margin-top: 1rem;">
+        <div class="d-flex justify-content-center align-items-center">
+            <div class="col-md-5" style="margin: 20px 0;">
+                <h1 style="font-size: 3rem; color: #2f3e23;">@ViewBag.numUsers</h1>
+                <h5>Number Users</h5>
+                <p style="color: #060a0d;">
+                    Number of Users Register in the App
+                </p>
+            </div>
+            <div style="height: 100px; border-left: 1px solid #ccc; margin: 0 20px;"></div>
+            <div class="col-md-5" style="margin: 20px 0;">
+                <h1 style="font-size: 3rem; color: #2f3e23;">@ViewBag.numTrips</h1>
+                <h5>Number Trips</h5>
+                <p style="color: #060a0d;">
+                    Number of Trips Created by our Users.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Counters Section -->
