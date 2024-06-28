@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dw23787.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240625224327_Initial-Model-Creation")]
-    partial class InitialModelCreation
+    [Migration("20240628163023_Update of Trips and Groups model")]
+    partial class UpdateofTripsandGroupsmodel
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,22 +27,14 @@ namespace Dw23787.Migrations
 
             modelBuilder.Entity("Dw23787.Models.Groups", b =>
                 {
-                    b.Property<int>("GroupId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GroupId"));
+                    b.Property<string>("GroupId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TripFk")
-                        .HasColumnType("int");
-
                     b.HasKey("GroupId");
-
-                    b.HasIndex("TripFk");
 
                     b.ToTable("Groups");
                 });
@@ -59,8 +51,9 @@ namespace Dw23787.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("GroupFK")
-                        .HasColumnType("int");
+                    b.Property<string>("GroupFK")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("MessageTitle")
                         .IsRequired()
@@ -83,17 +76,17 @@ namespace Dw23787.Migrations
 
             modelBuilder.Entity("Dw23787.Models.Trips", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Banner")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Category")
                         .HasColumnType("int");
+
+                    b.Property<bool>("Closed")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Description")
                         .IsRequired()
@@ -103,8 +96,9 @@ namespace Dw23787.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("GroupFK")
-                        .HasColumnType("int");
+                    b.Property<string>("GroupId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("InicialBudget")
                         .IsRequired()
@@ -120,12 +114,10 @@ namespace Dw23787.Migrations
                     b.Property<int>("UserFK")
                         .HasColumnType("int");
 
-                    b.Property<bool>("closed")
-                        .HasColumnType("bit");
-
                     b.HasKey("Id");
 
-                    b.HasIndex("GroupFK");
+                    b.HasIndex("GroupId")
+                        .IsUnique();
 
                     b.HasIndex("UserFK");
 
@@ -155,6 +147,10 @@ namespace Dw23787.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -376,17 +372,6 @@ namespace Dw23787.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Dw23787.Models.Groups", b =>
-                {
-                    b.HasOne("Dw23787.Models.Trips", "Trip")
-                        .WithMany()
-                        .HasForeignKey("TripFk")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Trip");
-                });
-
             modelBuilder.Entity("Dw23787.Models.Messages", b =>
                 {
                     b.HasOne("Dw23787.Models.Groups", "Group")
@@ -409,8 +394,8 @@ namespace Dw23787.Migrations
             modelBuilder.Entity("Dw23787.Models.Trips", b =>
                 {
                     b.HasOne("Dw23787.Models.Groups", "Group")
-                        .WithMany()
-                        .HasForeignKey("GroupFK")
+                        .WithOne("Trip")
+                        .HasForeignKey("Dw23787.Models.Trips", "GroupId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -479,6 +464,9 @@ namespace Dw23787.Migrations
             modelBuilder.Entity("Dw23787.Models.Groups", b =>
                 {
                     b.Navigation("MessagesList");
+
+                    b.Navigation("Trip")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Dw23787.Models.Users", b =>

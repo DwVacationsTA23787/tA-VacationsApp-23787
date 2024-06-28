@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Dw23787.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialModelCreation : Migration
+    public partial class UpdateofTripsandGroupsandmessagesModels : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -63,7 +63,8 @@ namespace Dw23787.Migrations
                     Gender = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Phone = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ProfilePicture = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    UserID = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                    UserID = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -180,10 +181,9 @@ namespace Dw23787.Migrations
                 name: "Groups",
                 columns: table => new
                 {
-                    GroupId = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    GroupId = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    TripFk = table.Column<int>(type: "int", nullable: false)
+                    TripFk = table.Column<string>(type: "nvarchar(450)", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -199,7 +199,7 @@ namespace Dw23787.Migrations
                     MessageTitle = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Photo = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    GroupFK = table.Column<int>(type: "int", nullable: false),
+                    GroupFK = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     UserFK = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
@@ -223,8 +223,7 @@ namespace Dw23787.Migrations
                 name: "Trips",
                 columns: table => new
                 {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     TripName = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Category = table.Column<int>(type: "int", nullable: false),
@@ -233,7 +232,7 @@ namespace Dw23787.Migrations
                     FinalBudget = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Banner = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     closed = table.Column<bool>(type: "bit", nullable: false),
-                    GroupFK = table.Column<int>(type: "int", nullable: false),
+                    GroupFK = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     UserFK = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>

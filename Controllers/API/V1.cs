@@ -1,6 +1,7 @@
 ﻿using Dw23787.Data;
 using Dw23787.Models;
 using Dw23787.Models.dto;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -169,6 +170,24 @@ namespace Dw23787.Controllers.API
         {
             var num = _Context.Trips.Count();
             return Ok(num);
+        }
+
+
+        [Authorize]
+        [HttpGet]
+        [Route("TravelCards")]
+        public ActionResult TravelCardsInfo()
+        {
+            var TravelCards = _Context.Trips
+      .Select(t => new TravelCardViewModel
+      {
+          Id = t.Id,
+          Name = t.TripName,
+          Description = t.Description,
+          Banner = t.Banner ?? ""
+      })
+      .ToList();
+            return Ok(TravelCards);
         }
     }
 }

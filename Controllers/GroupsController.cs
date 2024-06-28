@@ -25,12 +25,11 @@ namespace Dw23787.Controllers
         // GET: Groups
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Groups.Include(g => g.Trip);
-            return View(await applicationDbContext.ToListAsync());
+            return View(await _context.Groups.ToListAsync());
         }
 
         // GET: Groups/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(string id)
         {
             if (id == null)
             {
@@ -38,7 +37,6 @@ namespace Dw23787.Controllers
             }
 
             var groups = await _context.Groups
-                .Include(g => g.Trip)
                 .FirstOrDefaultAsync(m => m.GroupId == id);
             if (groups == null)
             {
@@ -51,7 +49,6 @@ namespace Dw23787.Controllers
         // GET: Groups/Create
         public IActionResult Create()
         {
-            ViewData["TripFk"] = new SelectList(_context.Trips, "Id", "Id");
             return View();
         }
 
@@ -60,7 +57,7 @@ namespace Dw23787.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("GroupId,Name,TripFk")] Groups groups)
+        public async Task<IActionResult> Create([Bind("GroupId,Name")] Groups groups)
         {
             if (ModelState.IsValid)
             {
@@ -68,12 +65,11 @@ namespace Dw23787.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["TripFk"] = new SelectList(_context.Trips, "Id", "Id", groups.TripFk);
             return View(groups);
         }
 
         // GET: Groups/Edit/5
-        public async Task<IActionResult> Edit(int? id)
+        public async Task<IActionResult> Edit(string id)
         {
             if (id == null)
             {
@@ -85,7 +81,6 @@ namespace Dw23787.Controllers
             {
                 return NotFound();
             }
-            ViewData["TripFk"] = new SelectList(_context.Trips, "Id", "Id", groups.TripFk);
             return View(groups);
         }
 
@@ -94,7 +89,7 @@ namespace Dw23787.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("GroupId,Name,TripFk")] Groups groups)
+        public async Task<IActionResult> Edit(string id, [Bind("GroupId,Name")] Groups groups)
         {
             if (id != groups.GroupId)
             {
@@ -121,12 +116,11 @@ namespace Dw23787.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["TripFk"] = new SelectList(_context.Trips, "Id", "Id", groups.TripFk);
             return View(groups);
         }
 
         // GET: Groups/Delete/5
-        public async Task<IActionResult> Delete(int? id)
+        public async Task<IActionResult> Delete(string id)
         {
             if (id == null)
             {
@@ -134,7 +128,6 @@ namespace Dw23787.Controllers
             }
 
             var groups = await _context.Groups
-                .Include(g => g.Trip)
                 .FirstOrDefaultAsync(m => m.GroupId == id);
             if (groups == null)
             {
@@ -147,7 +140,7 @@ namespace Dw23787.Controllers
         // POST: Groups/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> DeleteConfirmed(string id)
         {
             var groups = await _context.Groups.FindAsync(id);
             if (groups != null)
@@ -159,7 +152,7 @@ namespace Dw23787.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        private bool GroupsExists(int id)
+        private bool GroupsExists(string id)
         {
             return _context.Groups.Any(e => e.GroupId == id);
         }

@@ -4,65 +4,72 @@
     ViewData["Title"] = "Create";
 }
 
-<h1>Create</h1>
+<h1>Create Trip</h1>
 
-<h4>Trips</h4>
 <hr />
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-6">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
             <div class="form-group">
-                <label asp-for="TripName" class="control-label"></label>
+                <label asp-for="TripName" class="control-label">Trip Name</label>
                 <input asp-for="TripName" class="form-control" />
                 <span asp-validation-for="TripName" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Description" class="control-label"></label>
-                <input asp-for="Description" class="form-control" />
+                <label asp-for="Description" class="control-label">Description</label>
+                <textarea asp-for="Description" class="form-control" rows="4"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Category" class="control-label"></label>
-                <select asp-for="Category" class="form-control"></select>
+                <label asp-for="Category" class="control-label">Category</label>
+                <select asp-for="Category" class="form-control">
+                    @foreach (var category in Enum.GetValues(typeof(Dw23787.Models.Trips.TripCategory)))
+                    {
+                        <option value="@category">@category</option>
+                    }
+                </select>
                 <span asp-validation-for="Category" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Transport" class="control-label"></label>
-                <select asp-for="Transport" class="form-control"></select>
+                <label asp-for="Transport" class="control-label">Transport</label>
+                <select asp-for="Transport" class="form-control">
+                    @foreach (var transport in Enum.GetValues(typeof(Dw23787.Models.Trips.TripTransport)))
+                    {
+                        <option value="@transport">@transport</option>
+                    }
+                </select>
                 <span asp-validation-for="Transport" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="InicialBudget" class="control-label"></label>
-                <input asp-for="InicialBudget" class="form-control" />
+                <label asp-for="InicialBudget" class="control-label">Initial Budget</label>
+                <input asp-for="InicialBudget" class="form-control" type="number" />
                 <span asp-validation-for="InicialBudget" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="FinalBudget" class="control-label"></label>
-                <input asp-for="FinalBudget" class="form-control" />
+                <label asp-for="FinalBudget" class="control-label">Final Budget</label>
+                <input asp-for="FinalBudget" class="form-control" type="number" />
                 <span asp-validation-for="FinalBudget" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Banner" class="control-label"></label>
+                <label asp-for="Banner" class="control-label">Banner (optional)</label>
                 <input asp-for="Banner" class="form-control" />
                 <span asp-validation-for="Banner" class="text-danger"></span>
             </div>
+
             <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="closed" /> @Html.DisplayNameFor(model => model.closed)
-                </label>
+                <input class="form-check-input" asp-for="Closed" />
+                <label class="form-check-label" asp-for="Closed">Closed</label>
             </div>
-            <div class="form-group">
-                <label asp-for="GroupFK" class="control-label"></label>
-                <select asp-for="GroupFK" class ="form-control" asp-items="ViewBag.GroupFK"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="UserFK" class="control-label"></label>
-                <select asp-for="UserFK" class ="form-control" asp-items="ViewBag.UserFK"></select>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
+
+            <button type="submit" class="btn btn-primary">Create</button>
         </form>
     </div>
 </div>
@@ -72,5 +79,7 @@
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

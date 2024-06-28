@@ -7,6 +7,7 @@ using System.Diagnostics;
 
 namespace Dw23787.Controllers
 {
+
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;

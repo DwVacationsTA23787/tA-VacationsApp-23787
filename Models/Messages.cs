@@ -23,7 +23,7 @@ namespace Dw23787.Models
         // que o atributo 'GroupFK' é uma FK em conjunto
         // com o atributo 'Group'
         [ForeignKey(nameof(Group))]
-        public int GroupFK { get; set; } // FK para o Grupo
+        public string GroupFK { get; set; } // FK para o Grupo
         public Groups Group { get; set; } // FK para o Grupo
 
 

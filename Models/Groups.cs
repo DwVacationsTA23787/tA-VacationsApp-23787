@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Dw23787.Models
@@ -10,22 +11,15 @@ namespace Dw23787.Models
             MessagesList = new HashSet<Messages>();
         }
 
-        [Key] // Identifica que é o atributo será PK
-        public int GroupId { get; set; }
+        [Key]
+        public string GroupId { get; set; }
 
         public string Name { get; set; }
 
-
-        // relacionamento 1-N
-
-        // esta anotação informa a EF
-        // que o atributo 'TripFK' é uma FK em conjunto
-        // com o atributo 'Trip'
-
-        [ForeignKey(nameof(Trip))]
-        public int TripFk { get; set; }
+        // Navigation property to Trips (one-to-one relationship)
         public Trips Trip { get; set; }
-        public ICollection<Messages> MessagesList { get; set; }
 
+        // Collection navigation property for Messages (if needed)
+        public ICollection<Messages> MessagesList { get; set; }
     }
 }

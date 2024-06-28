@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Dw23787.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240627140858_Updated User Model")]
-    partial class UpdatedUserModel
+    [Migration("20240628151202_Update of Trips and Groups and messages Models")]
+    partial class UpdateofTripsandGroupsandmessagesModels
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -27,18 +27,16 @@ namespace Dw23787.Migrations
 
             modelBuilder.Entity("Dw23787.Models.Groups", b =>
                 {
-                    b.Property<int>("GroupId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GroupId"));
+                    b.Property<string>("GroupId")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("TripFk")
-                        .HasColumnType("int");
+                    b.Property<string>("TripFk")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.HasKey("GroupId");
 
@@ -59,8 +57,9 @@ namespace Dw23787.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("GroupFK")
-                        .HasColumnType("int");
+                    b.Property<string>("GroupFK")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("MessageTitle")
                         .IsRequired()
@@ -83,11 +82,8 @@ namespace Dw23787.Migrations
 
             modelBuilder.Entity("Dw23787.Models.Trips", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    b.Property<string>("Id")
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Banner")
                         .HasColumnType("nvarchar(max)");
@@ -103,8 +99,9 @@ namespace Dw23787.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("GroupFK")
-                        .HasColumnType("int");
+                    b.Property<string>("GroupFK")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("InicialBudget")
                         .IsRequired()
@@ -158,6 +155,10 @@ namespace Dw23787.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Password")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("Phone")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -166,10 +167,6 @@ namespace Dw23787.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("UserID")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("password")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
