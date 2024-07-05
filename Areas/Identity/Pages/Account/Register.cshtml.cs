@@ -123,6 +123,10 @@ namespace Dw23787.Areas.Identity.Pages.Account
             [Display(Name = "Gender")]
             public string Gender { get; set; }
 
+            [Required(ErrorMessage = "Please Write a little quote about yourself")]
+            [Display(Name = "Quote")]
+            public string Quote { get; set; }
+
 
         }
 
@@ -169,10 +173,14 @@ namespace Dw23787.Areas.Identity.Pages.Account
                             Phone = Input.Phone,
                             ProfilePicture = "",
                             UserID = user.Id,
-                            Password = user.PasswordHash
+                            Password = user.PasswordHash,
+                            Quote = Input.Quote,
                         };
 
-              
+                        DateTime today = DateTime.Today;
+                        int age = today.Year - Input.DataNascimento.Year;
+                        userApp.Age = age;
+
                         _context.Add(userApp);
                         await _context.SaveChangesAsync();
                     }

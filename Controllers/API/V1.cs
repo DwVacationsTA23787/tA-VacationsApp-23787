@@ -1,10 +1,11 @@
 ﻿using Dw23787.Data;
 using Dw23787.Models;
 using Dw23787.Models.dto;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using static Dw23787.Models.Trips;
 
 namespace Dw23787.Controllers.API
 {
@@ -19,7 +20,8 @@ namespace Dw23787.Controllers.API
         public SignInManager<IdentityUser> _signInManager;
 
 
-        public V1(ApplicationDbContext applicationDbContext, SignInManager<IdentityUser> signInManager, UserManager<IdentityUser> userManager) {
+        public V1(ApplicationDbContext applicationDbContext, SignInManager<IdentityUser> signInManager, UserManager<IdentityUser> userManager)
+        {
             _Context = applicationDbContext;
             _signInManager = signInManager;
             _userManager = userManager;
@@ -47,7 +49,7 @@ namespace Dw23787.Controllers.API
 
                 IdentityUser newUser = new IdentityUser
                 {
-                    UserName = user.Email,
+                    UserName = user.Name,
                     Email = user.Email,
                     Id = Guid.NewGuid().ToString(),
                     EmailConfirmed = true
@@ -70,7 +72,8 @@ namespace Dw23787.Controllers.API
                     Phone = user.Phone,
                     ProfilePicture = user.ProfilePicture,
                     UserID = newUser.Id,
-                    Password = newUser.PasswordHash
+                    Password = newUser.PasswordHash,
+                    Quote = user.Quote
                 };
 
                 // Calculate age
@@ -98,20 +101,20 @@ namespace Dw23787.Controllers.API
         {
             try
             {
-               
+
                 IdentityUser resultUser = await _userManager.FindByEmailAsync(email);
 
                 if (resultUser != null)
                 {
-                  
+
                     PasswordVerificationResult passWorks = new PasswordHasher<IdentityUser>().VerifyHashedPassword(resultUser, resultUser.PasswordHash, password);
 
                     if (passWorks == PasswordVerificationResult.Success)
                     {
-                        
+
                         await _signInManager.SignInAsync(resultUser, remainder); // 'remainder' determines if the user should be remembered for 14 days.
 
-                       
+
                         Users user = _Context.UsersApp.FirstOrDefault(u => u.UserID == resultUser.Id);
 
                         if (user != null)
@@ -119,13 +122,15 @@ namespace Dw23787.Controllers.API
                             // user to DTO
                             Usersdto userdto = new Usersdto
                             {
+                                Id = user.Id,
                                 Age = user.Age,
                                 Email = email,
                                 Gender = user.Gender,
                                 DataNascimento = user.DataNascimento,
                                 Phone = user.Phone,
                                 Name = user.Name,
-                                ProfilePicture = user.ProfilePicture
+                                ProfilePicture = user.ProfilePicture,
+                                Quote = user.Quote,
                             };
 
                             return Ok(userdto);
@@ -173,21 +178,288 @@ namespace Dw23787.Controllers.API
         }
 
 
-        [Authorize]
         [HttpGet]
         [Route("TravelCards")]
-        public ActionResult TravelCardsInfo()
+        public ActionResult GetTravelCards([FromQuery] int page, [FromQuery] int pageSize, [FromQuery] string category, [FromQuery] string? search = null)
         {
-            var TravelCards = _Context.Trips
-      .Select(t => new TravelCardViewModel
-      {
-          Id = t.Id,
-          Name = t.TripName,
-          Description = t.Description,
-          Banner = t.Banner ?? ""
-      })
-      .ToList();
-            return Ok(TravelCards);
+            int offset = (page - 1) * pageSize;
+
+            // Base query
+            var query = _Context.Trips.AsQueryable();
+
+            // Apply category filter if category is not empty or null
+            if (!string.IsNullOrEmpty(category) && category != "All")
+            {
+                if (Enum.TryParse(typeof(Trips.TripCategory), category, true, out var parsedCategory))
+                {
+                    query = query.Where(t => t.Category == (Trips.TripCategory)parsedCategory);
+                }
+                else
+                {
+                    return BadRequest("Invalid category.");
+                }
+            }
+
+            // Apply search filter if search is not empty or null
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(t => t.TripName.Contains(search) || t.Description.Contains(search));
+            }
+
+            // Get the total items count after applying the filters
+            int totalItems = query.Count();
+
+            // Apply pagination
+            var travelCards = query
+                .OrderBy(t => t.Id) // Order by an appropriate field to ensure consistent ordering
+                .Skip(offset)
+                .Take(pageSize)
+                .Select(t => new TravelCardViewModel
+                {
+                    Id = t.Id,
+                    Name = t.TripName,
+                    Description = t.Description,
+                    Banner = t.Banner ?? ""
+                })
+                .ToList();
+
+         
+            int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
+
+            var response = new
+            {
+                TotalItems = totalItems,
+                TotalPages = totalPages,
+                CurrentPage = page,
+                PageSize = pageSize,
+                TravelCards = travelCards
+            };
+
+            return Ok(response);
+        }
+
+
+
+
+
+        [HttpGet]
+        [Route("TripDetail")]
+        public async Task<ActionResult<TripDto>> TripDetailsAsync([FromQuery] string id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var trip = await _Context.Trips
+                .Include(t => t.User)
+                .FirstOrDefaultAsync(m => m.Id == id);
+
+            if (trip == null)
+            {
+                return NotFound();
+            }
+
+            var tripDto = new TripDto
+            {
+                Id = trip.Id,
+                TripName = trip.TripName,
+                Description = trip.Description,
+                Category = GetCategoryText(trip.Category), // Convert enum to text
+                Transport = GetTransportText(trip.Transport), // Convert enum to text
+                InicialBudget = trip.InicialBudget,
+                FinalBudget = trip.FinalBudget,
+                Banner = trip.Banner,
+                Closed = trip.Closed,
+                GroupId = trip.GroupId,
+                User = new UserDto
+                {
+                    Id = trip.User.Id,
+                    Name = trip.User.Name,
+                    Age = trip.User.Age,
+                    Gender = trip.User.Gender,
+                    ProfilePicture = trip.User.ProfilePicture,
+                    DataNascimento = trip.User.DataNascimento,
+                    Quote = trip.User.Quote
+
+                }
+            };
+
+            return Ok(tripDto);
+        }
+
+
+        [HttpGet]
+        [Route("UserTrips")]
+        public async Task<ActionResult> GetUserTrips([FromQuery] int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Invalid user ID.");
+            }
+
+            var user = await _Context.UsersApp.FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // user to DTO
+            var userDto = new Usersdto
+            {
+                Id = user.Id,
+                Age = user.Age,
+                Email = user.Email,
+                Gender = user.Gender,
+                DataNascimento = user.DataNascimento,
+                Phone = user.Phone,
+                Name = user.Name,
+                ProfilePicture = user.ProfilePicture,
+                Quote = user.Quote,
+            };
+
+            var tripsList = await _Context.Trips
+                               .Where(t => t.UserFK == id)
+                               .ToListAsync();
+
+            var result = new
+            {
+                user = userDto,
+                trips = tripsList,
+            };
+
+            return Ok(result);
+        }
+
+
+        [HttpGet]
+        [Route("NumberUserTrips")]
+        public async Task<ActionResult<int>> GetNumberUserTrips([FromQuery] int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Invalid user ID.");
+            }
+
+                var tripsCount = await _Context.Trips
+                                   .Where(t => t.UserFK == id)
+                                   .CountAsync();
+
+            return Ok(tripsCount);
+        }
+
+
+        [HttpGet]
+        [Route("GetUser")]
+        public ActionResult<int> GetUser([FromQuery] int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Invalid user ID.");
+            }
+
+            Users user = _Context.UsersApp.FirstOrDefault(u => u.Id == id);
+
+            if (user != null)
+            {
+                // user to DTO
+                Usersdto userdto = new Usersdto
+                {
+                    Id = user.Id,
+                    Age = user.Age,
+                    Email = user.Email,
+                    Gender = user.Gender,
+                    DataNascimento = user.DataNascimento,
+                    Phone = user.Phone,
+                    Name = user.Name,
+                    ProfilePicture = user.ProfilePicture,
+                    Quote = user.Quote,
+                };
+
+                return Ok(userdto);
+            }
+
+            return BadRequest("User not found");
+
+        }
+
+        [HttpPost]
+        [Route("UpdateUser/{id}")]
+        public IActionResult UpdateUser(int id, [FromBody] Usersdto updatedUserDto)
+        {
+            try
+            {
+                if (id <= 0 || updatedUserDto == null)
+                {
+                    return BadRequest("Invalid user ID or data.");
+                }
+
+                Users user = _Context.UsersApp.FirstOrDefault(u => u.Id == id);
+
+                if (user == null)
+                {
+                    return NotFound("User not found");
+                }
+
+                // Update user entity with updated data
+                user.Age = updatedUserDto.Age;
+                user.Email = updatedUserDto.Email;
+                user.Gender = updatedUserDto.Gender;
+                user.DataNascimento = updatedUserDto.DataNascimento;
+                user.Phone = updatedUserDto.Phone;
+                user.Name = updatedUserDto.Name;
+                user.ProfilePicture = updatedUserDto.ProfilePicture;
+                user.Quote = updatedUserDto.Quote;
+
+                _Context.UsersApp.Update(user); // Mark user entity as modified
+                _Context.SaveChanges(); // Save changes to database
+
+                return Ok("User updated successfully");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+
+        // Aux functions
+
+        private string GetCategoryText(TripCategory category)
+            {
+                switch (category)
+                {
+                    case TripCategory.Adventure:
+                        return "Adventure";
+                    case TripCategory.Leisure:
+                        return "Leisure";
+                    case TripCategory.Cultural:
+                        return "Cultural";
+                    case TripCategory.Business:
+                        return "Business";
+                    case TripCategory.Family:
+                        return "Family";
+                    default:
+                        return string.Empty;
+                }
+            }
+
+            private string GetTransportText(TripTransport transport)
+            {
+                switch (transport)
+                {
+                    case TripTransport.Plane:
+                        return "Plane";
+                    case TripTransport.Bus:
+                        return "Bus";
+                    case TripTransport.Train:
+                        return "Train";
+                    case TripTransport.Hitchhiking:
+                        return "Hitchhiking";
+                    default:
+                        return string.Empty;
+                }
+            }
         }
     }
-}

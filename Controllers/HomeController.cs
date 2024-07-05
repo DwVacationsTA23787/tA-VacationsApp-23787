@@ -2,7 +2,9 @@ using Dw23787.Data;
 using Dw23787.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Diagnostics;
+using System.Security.Claims;
 
 
 namespace Dw23787.Controllers
@@ -19,12 +21,27 @@ namespace Dw23787.Controllers
             _Context = applicationDbContext;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            ViewBag.numUsers = _Context.UsersApp.Count();
-            ViewBag.numTrips = _Context.Trips.Count();
-            return View();
+
+                if (User.Identity.IsAuthenticated)
+                {
+                string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                Users user = _Context.UsersApp.FirstOrDefault(u => u.UserID == userId);
+                ViewData["UserName"] = user.Name;
+                var applicationDbContext = _Context.Trips.Include(t => t.Group).Include(t => t.User);
+                return View("HomePageLogged", await applicationDbContext.ToListAsync());
+            }
+                else
+                {
+
+                        ViewBag.numUsers = _Context.UsersApp.Count();
+                        ViewBag.numTrips = _Context.Trips.Count();
+                        return View();
+                }
+
         }
+
 
         public IActionResult Privacy()
         {

@@ -26,5 +26,7 @@ namespace Dw23787.Data
         public DbSet<Messages> Messages { get; set; }
         public DbSet<Groups> Groups { get; set; }
 
+        public DbSet<Users_Groups> GroupAdmins { get; set; }
+
     }
 }

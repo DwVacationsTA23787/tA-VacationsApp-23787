@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Dw23787.Data;
@@ -18,9 +14,15 @@ namespace Dw23787.Controllers
     {
         private readonly ApplicationDbContext _context;
 
-        public TripsController(ApplicationDbContext context)
+        /// <summary>
+        /// objecto que contém os dados do Servidor
+        /// </summary>
+        private readonly IWebHostEnvironment _webHostEnvironment;
+
+        public TripsController(ApplicationDbContext context, IWebHostEnvironment webHostEnvironment)
         {
             _context = context;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         // GET: Trips
@@ -63,7 +65,7 @@ namespace Dw23787.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,TripName,Description,Category,Transport,InicialBudget,FinalBudget,Banner,Closed,UserFK")] Trips trips)
+        public async Task<IActionResult> Create([Bind("Id,TripName,Description,Category,Transport,InicialBudget,FinalBudget,Closed,UserFK")] Trips trips, IFormFile Banner)
         {
             try
             {
@@ -94,11 +96,82 @@ namespace Dw23787.Controllers
                 // Generate a GUID for the trip
                 trips.Id = Guid.NewGuid().ToString();
 
+                // vars auxiliares
+                string nomeImagem = "";
+                bool haImagem = false;
+
+                if (Banner == null)
+                {
+                    // não há
+                    // crio msg de erro
+                    ModelState.AddModelError("",
+                       "Deve fornecer um logótipo");
+                    // devolver controlo à View
+                    return View(trips);
+                }
+                else
+                {
+                    // verify MIME types
+                    if(!(Banner.ContentType == "image/png" ||
+                        Banner.ContentType == "image/jpeg")){
+                        trips.Banner = "default.webp";
+                    }
+                    else
+                    {
+                        haImagem = true;
+
+                        Guid g = Guid.NewGuid();
+                        nomeImagem = g.ToString();
+                        string extensaoImagem = Path.GetExtension(Banner.FileName).ToLowerInvariant();
+                        nomeImagem += extensaoImagem;
+                        trips.Banner = nomeImagem;
+                    }
+                }
+
+
+
                 // Add the trip and the associated group to the context
                 _context.Trips.Add(trips);
 
+                //newgroup e  user
+
+                Users_Groups user_groups = new Users_Groups();
+
+                user_groups.UserFK = user.Id;
+
+                user_groups.GroupFK = newGroup.GroupId;
+
+                _context.Add(user_groups);
+
                 // Save changes to the database to ensure trips.Id is generated
                 await _context.SaveChangesAsync();
+
+
+                if (haImagem)
+                {
+                    // encolher a imagem ao tamanho certo --> fazer pelos alunos
+                    // procurar no NuGet
+
+                    // determinar o local de armazenamento da imagem
+                    string localizacaoImagem = _webHostEnvironment.WebRootPath;
+                    // adicionar à raiz da parte web, o nome da pasta onde queremos guardar as imagens
+                    localizacaoImagem = Path.Combine(localizacaoImagem, "images");
+
+                    // será que o local existe?
+                    if (!Directory.Exists(localizacaoImagem))
+                    {
+                        Directory.CreateDirectory(localizacaoImagem);
+                    }
+
+                    // atribuir ao caminho o nome da imagem
+                    localizacaoImagem = Path.Combine(localizacaoImagem, nomeImagem);
+
+                    // guardar a imagem no Disco Rígido
+                    using var stream = new FileStream(
+                       localizacaoImagem, FileMode.Create
+                       );
+                    await Banner.CopyToAsync(stream);
+                }
 
                 // Redirect to the index page upon successful save
                 return RedirectToAction(nameof(Index));

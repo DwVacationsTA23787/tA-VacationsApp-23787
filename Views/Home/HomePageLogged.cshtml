@@ -1,0 +1,89 @@
+﻿@model IEnumerable<Dw23787.Models.Trips>
+
+@{
+    ViewData["Title"] = "Home Page";
+    var selectedCategory = "All";
+}
+<!-- Ensure CSS file link -->
+<link rel="stylesheet" href="~/css/TravelCard.css" />
+
+<div class="container mt-4 d-flex flex-column min-vh-100 rounded" style="background-color: #f8f9fa;">
+    <div>
+        <p class="saudation-text">
+            Hi, @ViewData["UserName"]
+        </p>
+        <p class="saudation-subtext">Let's search for a new travel!</p>
+    </div>
+    <div class="input-group mt-4">
+        <input type="search" class="form-control searchBar" placeholder="Search" aria-label="Search" aria-describedby="search-addon" id="searchText" />
+        <div class="input-group-append">
+            <span class="input-group-text border-0" style="cursor: pointer;" id="search-addon">
+                <span class="material-symbols-outlined">
+                    search
+                </span>
+            </span>
+        </div>
+    </div>
+    <div class="category-selection mt-4">
+        @{
+            var categories = Enum.GetValues(typeof(Dw23787.Models.Trips.TripCategory)).Cast<Dw23787.Models.Trips.TripCategory>();
+        }
+        <div class="row mt-4">
+            <p class="ExploreText">
+                Explore Travels
+            </p>
+            <div class="category-container">
+                <div class="category-item @(selectedCategory == "All" ? "active" : "")" onclick="selectCategory('All', this)">
+                    All
+                </div>
+                @foreach (var category in categories)
+                {
+                    <div class="category-item @(category.ToString() == selectedCategory && selectedCategory != "All" ? "active" : "")" onclick="selectCategory('@category.ToString()', this)">
+                        @category.ToString()
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="travel-cards-container mt-4" style="display: flex; flex-wrap: wrap; gap: 20px;">
+        @foreach (var travel in Model)
+        {
+            <div class="card" style="width: 18rem; cursor: pointer;" onclick="animateClick(this)">
+                <img src="@(string.IsNullOrEmpty(travel.Banner) ? Url.Content("~/images/default.webp") : Url.Content("~/images/" + travel.Banner))" class="card-img-top" alt="Card Image">
+                <div class="card-body">
+                    <p class="card-text">@travel.TripName</p>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Function to handle category selection
+        function selectCategory(category, element) {
+            // Remove 'active' class from all category items
+            var categoryItems = document.querySelectorAll('.category-item');
+            categoryItems.forEach(function (item) {
+                item.classList.remove('active');
+            });
+
+            // Add 'active' class to the clicked category item
+            element.classList.add('active');
+
+            console.log("Selected category:", category);
+            // Implement category filtering logic if needed
+        }
+
+        // Function to handle card click animation
+        function animateClick(element) {
+            element.classList.add('animate-click');
+
+            // Remove the class after animation ends
+            setTimeout(function () {
+                element.classList.remove('animate-click');
+            }, 300); // Adjust according to your animation duration
+        }
+    </script>
+}

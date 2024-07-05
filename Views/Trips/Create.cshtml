@@ -9,7 +9,7 @@
 <hr />
 <div class="row">
     <div class="col-md-6">
-        <form asp-action="Create">
+        <form asp-action="Create" method="post" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
             <div class="form-group">
@@ -59,8 +59,8 @@
             </div>
 
             <div class="form-group">
-                <label asp-for="Banner" class="control-label">Banner (optional)</label>
-                <input asp-for="Banner" class="form-control" />
+                <label asp-for="Banner" class="control-label">Banner</label>
+                <input type="file" name="Banner" accept=".png, .jpg, .jpeg" asp-for="Banner" class="form-control" />
                 <span asp-validation-for="Banner" class="text-danger"></span>
             </div>
 

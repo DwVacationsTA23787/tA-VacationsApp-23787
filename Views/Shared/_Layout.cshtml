@@ -7,6 +7,53 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Dw23787.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <style>
+        .category-container {
+            display: flex;
+            overflow-x: auto;
+            padding: 10px 0;
+        }
+
+        .category-item {
+            flex: 0 0 auto;
+            padding: 10px 20px;
+            margin-right: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            cursor: pointer;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+            .category-item:hover {
+                background-color: #e2e6ea;
+            }
+
+            .category-item.active {
+                background-color: #007bff;
+                color: white;
+            }
+
+        .ExploreText {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 0px;
+        }
+
+       
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24
+        }
+
+        .searchBar:focus{
+            outline: none;
+            box-shadow: none;
+        }
+
+
+    </style>
 </head>
 <body>
     <header>
