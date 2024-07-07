@@ -6,15 +6,24 @@ namespace Dw23787.Models
     public class Messages
     {
 
+        public Messages()
+        {
+            Time = DateTime.Now;
+        }
+
         [Key] // Identifica que é o atributo será PK
         public int MessageId { get; set; }
         
         public string MessageTitle { get; set; }
 
+        public DateTime Time { get; set; }
+
         public string Description { get; init; }
 
         public string? Photo { get; init; } // o '?' vai tornar o atributo em preenchimento facultativo
 
+        [NotMapped]
+        public string FormattedTime => $"{Time.ToString("hh:mm tt")} | {Time.ToString("MMM dd")}";
 
 
         // relacionamento 1-N

@@ -13,6 +13,8 @@ namespace Dw23787.Models
 
         public string Description { get; set; }
 
+        public string Location { get; set; }
+
         public TripCategory Category { get; set; }
 
         public TripTransport Transport { get; set; }

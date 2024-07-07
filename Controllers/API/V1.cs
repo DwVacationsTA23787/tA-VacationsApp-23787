@@ -4,7 +4,8 @@ using Dw23787.Models.dto;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
+using Microsoft.IdentityModel.Tokens;
+using System.Linq;
 using static Dw23787.Models.Trips;
 
 namespace Dw23787.Controllers.API
@@ -72,6 +73,7 @@ namespace Dw23787.Controllers.API
                     Phone = user.Phone,
                     ProfilePicture = user.ProfilePicture,
                     UserID = newUser.Id,
+                    Nationality = user.Nationality,
                     Password = newUser.PasswordHash,
                     Quote = user.Quote
                 };
@@ -180,7 +182,7 @@ namespace Dw23787.Controllers.API
 
         [HttpGet]
         [Route("TravelCards")]
-        public ActionResult GetTravelCards([FromQuery] int page, [FromQuery] int pageSize, [FromQuery] string category, [FromQuery] string? search = null)
+        public ActionResult GetTravelCards([FromQuery] int id, [FromQuery] int page, [FromQuery] int pageSize, [FromQuery] string category, [FromQuery] string? search = null)
         {
             int offset = (page - 1) * pageSize;
 
@@ -206,12 +208,15 @@ namespace Dw23787.Controllers.API
                 query = query.Where(t => t.TripName.Contains(search) || t.Description.Contains(search));
             }
 
-            // Get the total items count after applying the filters
+            // Filter out trips where UserFK matches the provided id
+            query = query.Where(t => t.UserFK != id);
+
+            // Get the total items
             int totalItems = query.Count();
 
             // Apply pagination
             var travelCards = query
-                .OrderBy(t => t.Id) // Order by an appropriate field to ensure consistent ordering
+                .OrderBy(t => t.Id) // Order by ID for consistency
                 .Skip(offset)
                 .Take(pageSize)
                 .Select(t => new TravelCardViewModel
@@ -223,9 +228,10 @@ namespace Dw23787.Controllers.API
                 })
                 .ToList();
 
-         
+            // Calculate total pages
             int totalPages = (int)Math.Ceiling((double)totalItems / pageSize);
 
+            // Prepare the response
             var response = new
             {
                 TotalItems = totalItems,
@@ -412,8 +418,8 @@ namespace Dw23787.Controllers.API
                 user.ProfilePicture = updatedUserDto.ProfilePicture;
                 user.Quote = updatedUserDto.Quote;
 
-                _Context.UsersApp.Update(user); // Mark user entity as modified
-                _Context.SaveChanges(); // Save changes to database
+                _Context.UsersApp.Update(user);
+                _Context.SaveChanges();
 
                 return Ok("User updated successfully");
             }
@@ -423,6 +429,124 @@ namespace Dw23787.Controllers.API
             }
         }
 
+
+        [HttpGet]
+        [Route("GetAllTripsForUser")]
+        public async Task<ActionResult> GetAllTripsForUser([FromQuery] int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Invalid user ID.");
+            }
+
+            var user = await _Context.UsersApp.FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            var tripsList = await _Context.Trips
+                               .Where(t => t.UserFK == id)
+                               .ToListAsync();
+
+            return Ok(tripsList);
+        }
+
+
+        [HttpGet]
+        [Route("GetAllGroupsForUser")]
+        public async Task<ActionResult> GetAllGroupsForUser([FromQuery] int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Invalid user ID.");
+            }
+
+            var user = await _Context.UsersApp.FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            // Retrieve all groups where the user is an admin
+            var adminGroups = await _Context.GroupAdmins
+                .Where(ug => ug.UserFK == id && ug.UserAdmin)
+                .Select(ug => ug.GroupFK)
+                .ToListAsync();
+
+            // Query to get groups with the count of users in each group
+            var groupsWithUserCount = await _Context.Groups
+                .Where(g => adminGroups.Contains(g.GroupId))
+                .Select(g => new
+                {
+                    GroupId = g.GroupId,
+                    GroupName = g.Name,
+                    UserCount = _Context.GroupAdmins.Count(ug => ug.GroupFK == g.GroupId)
+                })
+                .ToListAsync();
+
+
+            return Ok(groupsWithUserCount);
+        }
+
+
+        [HttpPost]
+        [Route("AddUserToGroup")]
+        public IActionResult AddUserToGroup([FromQuery] string groupId, [FromQuery] int userId)
+        {
+            if (string.IsNullOrEmpty(groupId) || userId <= 0)
+            {
+                return BadRequest("Invalid groupId or userId");
+            }
+
+            try
+            {
+                // Check group and user
+                var group = _Context.Groups.FirstOrDefault(g => g.GroupId == groupId);
+                if (group == null)
+                {
+                    return NotFound("Group not found");
+                }
+
+                var user = _Context.UsersApp.FirstOrDefault(u => u.Id == userId);
+                if (user == null)
+                {
+                    return NotFound("User not found");
+                }
+
+                //check if user is already in the group
+                var existingUserGroup = _Context.GroupAdmins
+                    .FirstOrDefault(ug => ug.UserFK == userId && ug.GroupFK == groupId);
+
+                if (existingUserGroup != null)
+                {
+                    return Ok("User already belongs to this group"); // acho que nao quero conflict
+                }
+
+                
+                var newUserGroup = new Users_Groups
+                {
+                    UserFK = userId,
+                    GroupFK = groupId
+                };
+
+                _Context.GroupAdmins.Add(newUserGroup);
+                _Context.SaveChanges();
+
+                return Ok("User successfully added to group");
+
+
+            }
+            catch(Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+
+
+            return Ok("");
+        }
 
         // Aux functions
 
@@ -445,7 +569,7 @@ namespace Dw23787.Controllers.API
                 }
             }
 
-            private string GetTransportText(TripTransport transport)
+        private string GetTransportText(TripTransport transport)
             {
                 switch (transport)
                 {

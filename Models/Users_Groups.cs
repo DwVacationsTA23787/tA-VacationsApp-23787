@@ -8,6 +8,13 @@ namespace Dw23787.Models
     [PrimaryKey(nameof(UserFK), nameof(GroupFK))]
     public class Users_Groups
     {
+
+        public Users_Groups()
+        {
+            UserAdmin = true;
+        }
+
+        // Pode ser redundante...
         public Boolean UserAdmin { get; set; }
 
         [ForeignKey(nameof(UserId))]

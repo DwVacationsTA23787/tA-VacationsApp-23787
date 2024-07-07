@@ -29,6 +29,7 @@ namespace Dw23787.Controllers
                 string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 Users user = _Context.UsersApp.FirstOrDefault(u => u.UserID == userId);
                 ViewData["UserName"] = user.Name;
+                // Aqui é onde tenho de filtrar as viagens para nao aparecer as do user
                 var applicationDbContext = _Context.Trips.Include(t => t.Group).Include(t => t.User);
                 return View("HomePageLogged", await applicationDbContext.ToListAsync());
             }

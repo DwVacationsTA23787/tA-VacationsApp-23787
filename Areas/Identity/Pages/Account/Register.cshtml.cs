@@ -123,6 +123,11 @@ namespace Dw23787.Areas.Identity.Pages.Account
             [Display(Name = "Gender")]
             public string Gender { get; set; }
 
+
+            [Required(ErrorMessage = "Nacionality is required")]
+            [Display(Name = "Nacionality")]
+            public string Nacionality { get; set; }
+
             [Required(ErrorMessage = "Please Write a little quote about yourself")]
             [Display(Name = "Quote")]
             public string Quote { get; set; }
@@ -174,6 +179,7 @@ namespace Dw23787.Areas.Identity.Pages.Account
                             ProfilePicture = "",
                             UserID = user.Id,
                             Password = user.PasswordHash,
+                            Nationality = Input.Nacionality,
                             Quote = Input.Quote,
                         };
 

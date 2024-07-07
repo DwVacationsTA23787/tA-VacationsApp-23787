@@ -27,6 +27,8 @@ namespace Dw23787.Models
 
         public string Quote { get; set; }
 
+        public string Nationality { get; set; }
+
         public string? ProfilePicture { get; set; }
 
 
