@@ -1,14 +1,29 @@
 ﻿@model IEnumerable<Dw23787.Models.Groups>
+@using Dw23787.Data
+@using System.Security.Claims
+@inject ApplicationDbContext _context
 
 @{
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<div class="container-fluid">
+
+@{
+    string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+    var user = _context.UsersApp.FirstOrDefault(u => u.UserID == userId);
+}
+@if (@user.isAdmin != true)
+{
+    <h1>Grousp owned by @user.Name</h1>
+}
+else
+{
+
+    <h1>List Of Groups</h1>
+}
+
 <table class="table">
     <thead>
         <tr>
@@ -33,3 +48,4 @@
 }
     </tbody>
 </table>
+</div>

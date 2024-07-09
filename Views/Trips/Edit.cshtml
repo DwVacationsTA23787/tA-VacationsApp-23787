@@ -10,7 +10,7 @@
 <hr />
 <div class="row">
     <div class="col-md-4">
-        <form asp-action="Edit">
+        <form asp-action="Edit" method="post" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="Id" />
             <div class="form-group">
@@ -24,13 +24,24 @@
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="Category" class="control-label"></label>
-                <select asp-for="Category" class="form-control"></select>
+                <label asp-for="Category" class="control-label">Category</label>
+                <select asp-for="Category" class="form-control">
+                    @foreach (var category in Enum.GetValues(typeof(Dw23787.Models.Trips.TripCategory)))
+                    {
+                        <option value="@category">@category</option>
+                    }
+                </select>
                 <span asp-validation-for="Category" class="text-danger"></span>
             </div>
+
             <div class="form-group">
-                <label asp-for="Transport" class="control-label"></label>
-                <select asp-for="Transport" class="form-control"></select>
+                <label asp-for="Transport" class="control-label">Transport</label>
+                <select asp-for="Transport" class="form-control">
+                    @foreach (var transport in Enum.GetValues(typeof(Dw23787.Models.Trips.TripTransport)))
+                    {
+                        <option value="@transport">@transport</option>
+                    }
+                </select>
                 <span asp-validation-for="Transport" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -45,7 +56,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="Banner" class="control-label"></label>
-                <input asp-for="Banner" class="form-control" />
+                <input type="file" asp-for="Banner" class="form-control" />
                 <span asp-validation-for="Banner" class="text-danger"></span>
             </div>
             <div class="form-group form-check">
@@ -54,14 +65,9 @@
                 </label>
             </div>
             <div class="form-group">
-                <label asp-for="GroupId" class="control-label"></label>
-                <select asp-for="GroupId" class="form-control" asp-items="ViewBag.GroupId"></select>
-                <span asp-validation-for="GroupId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UserFK" class="control-label"></label>
-                <select asp-for="UserFK" class="form-control" asp-items="ViewBag.UserFK"></select>
-                <span asp-validation-for="UserFK" class="text-danger"></span>
+                <label asp-for="Location" class="control-label">Location</label>
+                <input asp-for="Location" class="form-control" />
+                <span asp-validation-for="Location" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <input type="submit" value="Save" class="btn btn-primary" />

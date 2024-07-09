@@ -42,14 +42,25 @@
     }
 
     <div class="travel-cards-container mt-4" style="display: flex; flex-wrap: wrap; gap: 20px;">
-        @foreach (var travel in Model)
+        @if (Model.Count() == 0)
         {
-            <div onclick="animateClick(this); location.href='@Url.Action("TravelInfo", "Home", new { id = travel.Id })'" class="card" style="width: 18rem; cursor: pointer;" onclick="animateClick(this)">
-                <img src="@(string.IsNullOrEmpty(travel.Banner) ? Url.Content("~/images/default.webp") : Url.Content("~/images/" + travel.Banner))" class="card-img-top" alt="Card Image">
-                <div class="card-body">
-                    <p class="card-text">@travel.TripName</p>
-                </div>
+            <div class="row align-self-center">
+                    <div class="alert alert-info" role="alert">
+                        No trips found. <a asp-controller="Trips" asp-action="Create">Create a new trip</a>.
+                    </div>
             </div>
+        }
+        else
+        {
+            foreach (var travel in Model)
+            {
+                <div onclick="animateClick(this); location.href='@Url.Action("TravelInfo", "Home", new { id = travel.Id })'" class="card" style="width: 18rem; cursor: pointer;">
+                    <img src="@(string.IsNullOrEmpty(travel.Banner) ? Url.Content("~/images/default.webp") : Url.Content("~/images/" + travel.Banner))" class="card-img-top" alt="Card Image">
+                    <div class="card-body">
+                        <p class="card-text">@travel.TripName</p>
+                    </div>
+                </div>
+            }
         }
     </div>
 </div>

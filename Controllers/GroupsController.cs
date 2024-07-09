@@ -7,13 +7,10 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Dw23787.Data;
 using Dw23787.Models;
-using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
 namespace Dw23787.Controllers
 {
-
-    [Authorize]
     public class GroupsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -29,7 +26,7 @@ namespace Dw23787.Controllers
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             Users user = _context.UsersApp.FirstOrDefault(u => u.UserID == userId);
 
-            if(user.isAdmin == false)
+            if (user.isAdmin == false)
             {
                 // Retrieve all groups where the user is an admin
                 var adminGroups = await _context.GroupAdmins
@@ -109,23 +106,23 @@ namespace Dw23787.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("GroupId,Name")] Groups groups)
+        public async Task<IActionResult> Edit(string id, [Bind("GroupId,Name")] Groups group)
         {
-            if (id != groups.GroupId)
+
+            if (id != group.GroupId)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
-            {
                 try
                 {
-                    _context.Update(groups);
+                    // Attach the entity and set its state to Modified
+                    _context.Entry(group).State = EntityState.Modified;
                     await _context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!GroupsExists(groups.GroupId))
+                    if (!GroupsExists(group.GroupId))
                     {
                         return NotFound();
                     }
@@ -135,8 +132,8 @@ namespace Dw23787.Controllers
                     }
                 }
                 return RedirectToAction(nameof(Index));
-            }
-            return View(groups);
+            
+            return View(group);
         }
 
         // GET: Groups/Delete/5
@@ -162,13 +159,27 @@ namespace Dw23787.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
+            Console.WriteLine("IM POST");
+
             var groups = await _context.Groups.FindAsync(id);
-            if (groups != null)
+            if (groups == null)
             {
-                _context.Groups.Remove(groups);
+                return NotFound();
             }
 
+            var tripExists = await _context.Trips
+                                           .Where(t => t.GroupId == groups.GroupId)
+                                           .FirstOrDefaultAsync();
+
+            if (tripExists != null)
+            {
+                ModelState.AddModelError(string.Empty, "To delete the group, first delete the Trip.");
+                return View(groups);
+            }
+
+            _context.Groups.Remove(groups);
             await _context.SaveChangesAsync();
+
             return RedirectToAction(nameof(Index));
         }
 

@@ -78,7 +78,7 @@ namespace Dw23787.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,TripName,Description,Category,Transport,InicialBudget,FinalBudget,Closed,Location,UserFK")] Trips trips, IFormFile Banner)
+        public async Task<IActionResult> Create([Bind("Id,TripName,Description,Category,Transport,InicialBudget,FinalBudget,Location,UserFK")] Trips trips, IFormFile Banner)
         {
             try
             {
@@ -228,20 +228,87 @@ namespace Dw23787.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(string id, [Bind("Id,TripName,Description,Category,Transport,InicialBudget,FinalBudget,Banner,Closed,GroupId,UserFK")] Trips trips)
+        public async Task<IActionResult> Edit(string id, [Bind("Id,TripName,Description,Category,Transport,InicialBudget,FinalBudget,Closed, Location")] Trips trips, IFormFile Banner)
         {
             if (id != trips.Id)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            // Vars Aux
+            string nomeImagem = "";
+            bool haImagem = false;
+
+            if (Banner != null)
             {
+                Console.WriteLine("2");
+                if (!(Banner.ContentType == "image/png" ||
+                                        Banner.ContentType == "image/jpeg"))
+                {
+                    Console.WriteLine("4");
+                    trips.Banner = "default.webp";
+                }
+                else
+                {
+                    Console.WriteLine("3");
+                    haImagem = true;
+
+                    Guid g = Guid.NewGuid();
+                    nomeImagem = g.ToString();
+                    string extensaoImagem = Path.GetExtension(Banner.FileName).ToLowerInvariant();
+                    nomeImagem += extensaoImagem;
+                    trips.Banner = nomeImagem;
+                }
+            }
+
                 try
                 {
-                    _context.Update(trips);
-                    await _context.SaveChangesAsync();
+
+                var originalTrip = await _context.Trips.AsNoTracking().FirstOrDefaultAsync(x => x.Id == trips.Id);
+                if (originalTrip == null)
+                {
+                    return NotFound();
                 }
+
+                if(haImagem == false)
+                {
+                    trips.Banner = originalTrip.Banner;
+                }
+                // Preserve non-editable fields
+                trips.GroupId = originalTrip.GroupId;
+                trips.UserFK = originalTrip.UserFK;
+
+
+                // Attach the entity and set its state to Modified
+                _context.Entry(trips).State = EntityState.Modified;
+                await _context.SaveChangesAsync();
+
+                if (haImagem)
+                {
+                    // encolher a imagem ao tamanho certo --> fazer pelos alunos
+                    // procurar no NuGet
+
+                    // determinar o local de armazenamento da imagem
+                    string localizacaoImagem = _webHostEnvironment.WebRootPath;
+                    // adicionar à raiz da parte web, o nome da pasta onde queremos guardar as imagens
+                    localizacaoImagem = Path.Combine(localizacaoImagem, "images");
+
+                    // será que o local existe?
+                    if (!Directory.Exists(localizacaoImagem))
+                    {
+                        Directory.CreateDirectory(localizacaoImagem);
+                    }
+
+                    // atribuir ao caminho o nome da imagem
+                    localizacaoImagem = Path.Combine(localizacaoImagem, nomeImagem);
+
+                    // guardar a imagem no Disco Rígido
+                    using var stream = new FileStream(
+                       localizacaoImagem, FileMode.Create
+                       );
+                    await Banner.CopyToAsync(stream);
+                }
+            }
                 catch (DbUpdateConcurrencyException)
                 {
                     if (!TripsExists(trips.Id))
@@ -254,7 +321,7 @@ namespace Dw23787.Controllers
                     }
                 }
                 return RedirectToAction(nameof(Index));
-            }
+
             ViewData["GroupId"] = new SelectList(_context.Groups, "GroupId", "GroupId", trips.GroupId);
             ViewData["UserFK"] = new SelectList(_context.UsersApp, "Id", "Id", trips.UserFK);
             return View(trips);
@@ -286,6 +353,7 @@ namespace Dw23787.Controllers
         public async Task<IActionResult> DeleteConfirmed(string id)
         {
             var trips = await _context.Trips.FindAsync(id);
+
             if (trips != null)
             {
                 _context.Trips.Remove(trips);

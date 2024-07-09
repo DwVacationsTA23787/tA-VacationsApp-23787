@@ -11,14 +11,16 @@
     <h4>Groups</h4>
     <hr />
     <dl class="row">
-        <dt class = "col-sm-2">
+        <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Name)
         </dt>
-        <dd class = "col-sm-10">
+        <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Name)
         </dd>
     </dl>
-    
+
+    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
     <form asp-action="Delete">
         <input type="hidden" asp-for="GroupId" />
         <input type="submit" value="Delete" class="btn btn-danger" /> |

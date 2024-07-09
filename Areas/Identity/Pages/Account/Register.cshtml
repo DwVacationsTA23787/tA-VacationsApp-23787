@@ -9,7 +9,7 @@
         <div class="row">
             <div class="col-sm-6 text-black">
                 <div class="d-flex align-items-center h-custom-2 px-5 ms-xl-4 mt-5 pt-5 pt-xl-0 mt-xl-n5">
-                    <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" style="width: 23rem;">
+                    <form id="registerForm" asp-route-returnUrl="@Model.ReturnUrl" method="post" enctype="multipart/form-data" style="width: 23rem;">
                         <h3 class="fw-normal mb-3 pb-3" style="letter-spacing: 1px;">Sign up</h3>
 
                         <div class="form-floating mb-4">
@@ -59,6 +59,12 @@
                             <input asp-for="Input.Phone" class="form-control form-control-lg" />
                             <label asp-for="Input.Phone">Phone</label>
                             <span asp-validation-for="Input.Phone" class="text-danger"></span>
+                        </div>
+
+                        <div class="form-group mb-4">
+                            <label asp-for="Input.profilePicture" class="control-label">Profile Picture</label>
+                            <input type="file" name="Input.profilePicture" accept=".png, .jpg, .jpeg" class="form-control" />
+                            <span asp-validation-for="Input.profilePicture" class="text-danger"></span>
                         </div>
 
                         <div class="form-floating mb-4">

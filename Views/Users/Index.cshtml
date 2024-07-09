@@ -1,14 +1,30 @@
 ﻿@model IEnumerable<Dw23787.Models.Users>
+@using Dw23787.Data
+@using System.Security.Claims
+@inject ApplicationDbContext _context
 
 @{
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
+<div class="container-fluid">
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+    @{
+        string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var user = _context.UsersApp.FirstOrDefault(u => u.UserID == userId);
+    }
+    @if (@user.isAdmin != true)
+    {
+        <h1>User Info</h1>
+    }
+    else
+    {
+        
+    <h1>List Of Users</h1>
+    <p>
+            <a class="btn btn-success" asp-action="Create">Create New</a>
+    </p>
+    }
 <table class="table">
     <thead>
         <tr>
@@ -31,6 +47,12 @@
                 @Html.DisplayNameFor(model => model.Phone)
             </th>
             <th>
+                 @Html.DisplayNameFor(model => model.Quote)
+            </th>
+            <th>
+                 @Html.DisplayNameFor(model => model.Nationality)
+            </th>
+            <th>
                 @Html.DisplayNameFor(model => model.ProfilePicture)
             </th>
             <th>
@@ -38,6 +60,9 @@
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.Password)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.isAdmin)
             </th>
             <th></th>
         </tr>
@@ -64,13 +89,22 @@
                 @Html.DisplayFor(modelItem => item.Phone)
             </td>
             <td>
+                @Html.DisplayFor(modelItem => item.Quote)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Nationality)
+            </td>
+            <td>
                 @Html.DisplayFor(modelItem => item.ProfilePicture)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.UserID)
             </td>
-            <td>
+            <td class="text-truncate" style="max-width: 150px;">
                 @Html.DisplayFor(modelItem => item.Password)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.isAdmin)
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.Id">Edit</a> |
@@ -81,3 +115,4 @@
 }
     </tbody>
 </table>
+</div>

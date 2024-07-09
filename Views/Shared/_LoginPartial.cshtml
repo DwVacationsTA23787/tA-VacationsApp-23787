@@ -1,14 +1,28 @@
-﻿@using Microsoft.AspNetCore.Identity
+﻿@using Dw23787.Data
+@using Microsoft.AspNetCore.Identity
+@using System.Security.Claims
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
+@inject ApplicationDbContext _context
 
 <ul class="navbar-nav">
 @if (SignInManager.IsSignedIn(User))
 {
     <li class="nav-item">
-        <a  class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">Hello @User.Identity?.Name!</a>
+        <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Manage/Index" title="Manage">
+                @{
+                    string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                    var user = _context.UsersApp.FirstOrDefault(u => u.UserID == userId);
+                }
+                @if (user != null && !string.IsNullOrEmpty(user.ProfilePicture))
+                {
+                    <img class="rounded-3 shadow-lg" style="width: 40px; height: 40px;" src="~/images/@user.ProfilePicture" alt="Profile Picture" />
+                }else{
+                    <img class="rounded-3 shadow-lg" style="width: 40px; height: 40px;" src="https://mdbootstrap.com/img/Photos/Avatars/man2.jpg" alt="Profile Picture" />
+                }
+        </a>
     </li>
-    <li class="nav-item">
+        <li class="nav-item align-self-center">
         <form  class="form-inline" asp-area="Identity" asp-page="/Account/Logout" asp-route-returnUrl="@Url.Action("Index", "Home", new { area = "" })">
             <button  type="submit" class="nav-link btn btn-link text-dark">Logout</button>
         </form>
@@ -16,10 +30,10 @@
 }
 else
 {
-    <li class="nav-item">
+        <li class="nav-item align-self-center">
         <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Register">Register</a>
     </li>
-    <li class="nav-item">
+        <li class="nav-item align-self-center">
         <a class="nav-link text-dark" asp-area="Identity" asp-page="/Account/Login">Login</a>
     </li>
 }

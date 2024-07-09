@@ -6,6 +6,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Threading;
@@ -14,6 +15,7 @@ using Dw23787.Data;
 using Dw23787.Models;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -35,6 +37,7 @@ namespace Dw23787.Areas.Identity.Pages.Account
         private readonly IEmailSender _emailSender;
 
         private readonly ApplicationDbContext _context;
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
         public RegisterModel(
             UserManager<IdentityUser> userManager,
@@ -42,7 +45,8 @@ namespace Dw23787.Areas.Identity.Pages.Account
             SignInManager<IdentityUser> signInManager,
             ILogger<RegisterModel> logger,
             IEmailSender emailSender,
-            ApplicationDbContext applicationDbContext)
+            ApplicationDbContext applicationDbContext,
+            IWebHostEnvironment webHostEnvironment)
         {
             _userManager = userManager;
             _userStore = userStore;
@@ -51,6 +55,7 @@ namespace Dw23787.Areas.Identity.Pages.Account
             _logger = logger;
             _emailSender = emailSender;
             _context = applicationDbContext;
+            _webHostEnvironment = webHostEnvironment;
         }
 
         /// <summary>
@@ -132,6 +137,9 @@ namespace Dw23787.Areas.Identity.Pages.Account
             [Display(Name = "Quote")]
             public string Quote { get; set; }
 
+            [Display(Name = "ProfilePicture")]
+            public IFormFile profilePicture { get; set; }
+
 
         }
 
@@ -163,6 +171,10 @@ namespace Dw23787.Areas.Identity.Pages.Account
                 // Create user with password
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
+                // vars aux
+                string nomeImagem = "";
+                bool haImagem = false;
+
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
@@ -183,12 +195,62 @@ namespace Dw23787.Areas.Identity.Pages.Account
                             Quote = Input.Quote,
                         };
 
+                        Console.WriteLine(Input.profilePicture);
+
                         DateTime today = DateTime.Today;
                         int age = today.Year - Input.DataNascimento.Year;
                         userApp.Age = age;
 
+                        //Image addition
+                        if (Input.profilePicture != null)
+                        {
+                            if (!(Input.profilePicture.ContentType == "image/png" ||
+                                                  Input.profilePicture.ContentType == "image/jpeg"))
+                            {
+                                userApp.ProfilePicture = "default.webp"; // set default user logo.
+                            }
+                            else
+                            {
+                                haImagem = true;
+
+                                Guid g = Guid.NewGuid();
+                                nomeImagem = g.ToString();
+                                string extensaoImagem = Path.GetExtension(Input.profilePicture.FileName).ToLowerInvariant();
+                                nomeImagem += extensaoImagem;
+                                userApp.ProfilePicture = nomeImagem;
+                            }
+                        }
+
+
                         _context.Add(userApp);
                         await _context.SaveChangesAsync();
+
+                        if (haImagem)
+                        {
+                            // encolher a imagem ao tamanho certo --> fazer pelos alunos
+                            // procurar no NuGet
+
+                            // determinar o local de armazenamento da imagem
+                            string localizacaoImagem = _webHostEnvironment.WebRootPath;
+                            // adicionar à raiz da parte web, o nome da pasta onde queremos guardar as imagens
+                            localizacaoImagem = Path.Combine(localizacaoImagem, "images");
+
+                            // será que o local existe?
+                            if (!Directory.Exists(localizacaoImagem))
+                            {
+                                Directory.CreateDirectory(localizacaoImagem);
+                            }
+
+                            // atribuir ao caminho o nome da imagem
+                            localizacaoImagem = Path.Combine(localizacaoImagem, nomeImagem);
+
+                            // guardar a imagem no Disco Rígido
+                            using var stream = new FileStream(
+                               localizacaoImagem, FileMode.Create
+                               );
+                            await Input.profilePicture.CopyToAsync(stream);
+                        }
+
                     }
                     catch (Exception ex)
                     {

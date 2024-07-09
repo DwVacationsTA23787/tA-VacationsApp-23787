@@ -39,7 +39,7 @@ namespace Dw23787.Controllers.API
 
         [HttpPost]
         [Route("Register")]
-        public async Task<ActionResult> CreateUser([FromBody] Users user)
+        public async Task<ActionResult> CreateUser([FromForm] Users user, IFormFile profilePicture)
         {
             if (user == null)
             {
@@ -57,7 +57,7 @@ namespace Dw23787.Controllers.API
 
                 IdentityUser newUser = new IdentityUser
                 {
-                    UserName = user.Name,
+                    UserName = user.Email,
                     Email = user.Email,
                     Id = Guid.NewGuid().ToString(),
                     EmailConfirmed = true
@@ -78,7 +78,6 @@ namespace Dw23787.Controllers.API
                     Name = user.Name,
                     Gender = user.Gender,
                     Phone = user.Phone,
-                    ProfilePicture = user.ProfilePicture,
                     UserID = newUser.Id,
                     Nationality = user.Nationality,
                     Password = newUser.PasswordHash,
@@ -90,9 +89,60 @@ namespace Dw23787.Controllers.API
                 int age = today.Year - user.DataNascimento.Year;
                 userApp.Age = age;
 
+                string nomeImagem = "";
+                bool haImagem = false;
+
+                //add image
+
+                if (profilePicture != null)
+                {
+                    if (!(profilePicture.ContentType == "image/png" ||
+                                          profilePicture.ContentType == "image/jpeg"))
+                    {
+                        userApp.ProfilePicture = "default.webp"; // set default user logo.
+                    }
+                    else
+                    {
+                        haImagem = true;
+
+                        Guid g = Guid.NewGuid();
+                        nomeImagem = g.ToString();
+                        string extensaoImagem = Path.GetExtension(profilePicture.FileName).ToLowerInvariant();
+                        nomeImagem += extensaoImagem;
+                        userApp.ProfilePicture = nomeImagem;
+                    }
+                }
+
+
                 _Context.UsersApp.Add(userApp);
 
                 await _Context.SaveChangesAsync(); // Completes the transaction
+
+                if (haImagem)
+                {
+                    // encolher a imagem ao tamanho certo --> fazer pelos alunos
+                    // procurar no NuGet
+
+                    // determinar o local de armazenamento da imagem
+                    string localizacaoImagem = _webHostEnvironment.WebRootPath;
+                    // adicionar à raiz da parte web, o nome da pasta onde queremos guardar as imagens
+                    localizacaoImagem = Path.Combine(localizacaoImagem, "images");
+
+                    // será que o local existe?
+                    if (!Directory.Exists(localizacaoImagem))
+                    {
+                        Directory.CreateDirectory(localizacaoImagem);
+                    }
+
+                    // atribuir ao caminho o nome da imagem
+                    localizacaoImagem = Path.Combine(localizacaoImagem, nomeImagem);
+
+                    // guardar a imagem no Disco Rígido
+                    using var stream = new FileStream(
+                       localizacaoImagem, FileMode.Create
+                       );
+                    await profilePicture.CopyToAsync(stream);
+                }
 
                 return Ok("User registered successfully");
             }

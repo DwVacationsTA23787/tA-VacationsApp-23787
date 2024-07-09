@@ -1,14 +1,31 @@
 ﻿@model IEnumerable<Dw23787.Models.Trips>
+@using Dw23787.Data
+@using System.Security.Claims
+@inject ApplicationDbContext _context
 
 @{
     ViewData["Title"] = "Index";
 }
 
-<h1>Index</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<div class="container-fluid">
+
+    @{
+        string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var user = _context.UsersApp.FirstOrDefault(u => u.UserID == userId);
+    }
+    @if (@user.isAdmin != true)
+    {
+        <h1>Trips Created By @user.Name</h1>
+    }
+    else
+    {
+
+        <h1>List Of Trips</h1>
+        <p>
+            <a class="btn btn-success" asp-action="Create">Create New</a>
+        </p>
+    }
 <table class="table">
     <thead>
         <tr>
@@ -87,3 +104,4 @@
 }
     </tbody>
 </table>
+</div>
