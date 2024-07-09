@@ -58,7 +58,13 @@
 
             <div class="col-lg-4 mb-5 mb-lg-0 position-relative d-flex justify-content-center align-items-center">
                 <div class="text-center">
-                    <img src="https://mdbcdn.b-cdn.net/img/new/avatars/2.webp" class="rounded-circle shadow-4" style="width: 150px;" alt="Avatar" />
+                    @if (String.IsNullOrEmpty(Model.User.ProfilePicture))
+                    {
+                        <img src="~/images/profile.jpeg" class="rounded-circle shadow-4" style="width: 150px;" alt="Avatar" />
+                    }else{
+
+                    <img src="@Url.Content("~/images/" + Model.User.ProfilePicture)" class="rounded-circle shadow-4" style="width: 150px;" alt="Avatar" />
+                    }
                     <h4 class="mt-3 tracking-wide"><strong>@Model.User.Name</strong></h4>
                     <h5 class="mt-3 tracking-wider font-italic">
                         @if (!string.IsNullOrEmpty(Model.User.Quote))

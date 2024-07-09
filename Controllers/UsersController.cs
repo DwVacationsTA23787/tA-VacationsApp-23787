@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
+using System.Text.RegularExpressions;
 
 namespace Dw23787.Controllers
 {
@@ -303,8 +304,18 @@ namespace Dw23787.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Users userLogged = _context.UsersApp.FirstOrDefault(u => u.UserID == userId);
+
+            if (userLogged.Id == id)
+            {
+                ModelState.AddModelError(string.Empty, "You Cant delete yourself!");
+                return View(userLogged);
+            }
             var users = await _context.UsersApp.FindAsync(id);
             var userNet = await _userManager.FindByIdAsync(users.UserID);
+
+
 
 
             if (users != null)
@@ -314,8 +325,8 @@ namespace Dw23787.Controllers
                     var result = await _userManager.DeleteAsync(userNet);
                     if (!result.Succeeded)
                     {
-                        ModelState.AddModelError("", "Failed to delete user");
-                        return RedirectToAction(nameof(Index)); // Or return to appropriate view
+                        ModelState.AddModelError(string.Empty, "User not deleted!");
+                        return View(users);
                     }
 
                     _context.UsersApp.Remove(users);
