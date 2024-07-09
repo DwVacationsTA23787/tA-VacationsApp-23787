@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Dw23787.Data;
 using Dw23787.Models;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Dw23787.Controllers
 {
@@ -25,7 +26,15 @@ namespace Dw23787.Controllers
         // GET: Users
         public async Task<IActionResult> Index()
         {
-            return View(await _context.UsersApp.ToListAsync());
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Users user = _context.UsersApp.FirstOrDefault(u => u.UserID == userId);
+
+            if (user.isAdmin == false)
+            {
+                return View(await _context.UsersApp.Where(u => u.Id == user.Id).ToListAsync());
+            }
+
+             return View(await _context.UsersApp.ToListAsync());
         }
 
         // GET: Users/Details/5

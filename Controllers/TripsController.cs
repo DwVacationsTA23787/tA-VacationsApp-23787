@@ -5,6 +5,7 @@ using Dw23787.Data;
 using Dw23787.Models;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.Extensions.Primitives;
 
 namespace Dw23787.Controllers
 {
@@ -28,6 +29,7 @@ namespace Dw23787.Controllers
         // GET: Trips
         public async Task<IActionResult> Index()
         {
+            //ViewData["ActivePage"] = "Trips";
             string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             Users user = _context.UsersApp.FirstOrDefault(u => u.UserID == userId);
 
@@ -296,8 +298,14 @@ namespace Dw23787.Controllers
 
         public async Task<IActionResult> UserTravels(string id)
         {
+            int newId = int.Parse(id);
 
-            return View("UserTravels"); // Ensure "UserTravels" is the correct name of your view
+            Users user = _context.UsersApp.FirstOrDefault(u => u.Id == newId);
+            ViewData["UserName"] = user.Name;
+
+            var applicationDbContext = _context.Trips.Where(t => t.UserFK == user.Id).Include(t => t.Group).Include(t => t.User);
+         
+            return View("UserTravels", await applicationDbContext.ToListAsync());
         }
 
         private bool TripsExists(string id)

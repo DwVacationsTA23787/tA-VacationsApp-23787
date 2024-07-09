@@ -1,8 +1,63 @@
-﻿@model Dw23787.Models.Users
+﻿@model IEnumerable<Dw23787.Models.Trips>
 
 @{
     ViewData["Title"] = "UserTravels";
 }
 
-<h1>UserTravels</h1>
 
+<link rel="stylesheet" href="~/css/TravelCard.css" />
+
+<div class='container mt-4 d-flex flex-column min-vh-100' style={{ backgroundColor: '#f8f9fa' }}>
+    <p class='saudation-text'>
+        You are seeing travels created by, @ViewData["UserName"]
+    </p>
+    <p class='saudation-subtext'>Let's search for a new travel!</p>
+
+    <div class="travel-cards-container mt-4" style="display: flex; flex-wrap: wrap; gap: 20px;">
+        @foreach (var travel in Model)
+        {
+            <div onclick="animateClick(this); location.href='@Url.Action("TravelInfo", "Home", new { id = travel.Id })'" class="card" style="width: 18rem; cursor: pointer;" onclick="animateClick(this)">
+                <img src="@(string.IsNullOrEmpty(travel.Banner) ? Url.Content("~/images/default.webp") : Url.Content("~/images/" + travel.Banner))" class="card-img-top" alt="Card Image">
+                <div class="card-body">
+                    <p class="card-text">@travel.TripName</p>
+                </div>
+            </div>
+        }
+    </div>
+
+
+</div>
+
+
+
+<style>
+    .saudation-text {
+        font-size: 1.5rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        color: #2f3e23;
+        margin-bottom: 5px;
+    }
+
+    .saudation-subtext {
+        font-size: 1rem;
+        letter-spacing: .1rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        color: #060a0d;
+    }
+</style>
+
+@section Scripts {
+    <script>
+        // Function to handle card click animation
+        function animateClick(element) {
+            element.classList.add('animate-click');
+
+            // Remove the class after animation ends
+            setTimeout(function () {
+                element.classList.remove('animate-click');
+            }, 300); // Adjust according to your animation duration
+        }
+    </script>
+}
