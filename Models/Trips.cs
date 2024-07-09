@@ -6,6 +6,12 @@ namespace Dw23787.Models
 {
     public class Trips
     {
+
+        public Trips() {
+            Closed = false;
+        }
+
+
         [Key]
         public string Id { get; set; }
 

@@ -1,0 +1,94 @@
+﻿@model Dw23787.Models.dto.TripDto
+
+@{
+    ViewData["Title"] = "Travel Details";
+}
+
+<div class="container-fluid mt-4">
+    <div class="row h-100 align-items-stretch">
+        <div class="col-md-6 d-flex align-items-stretch">
+            <img src="@Url.Content("~/images/" + Model.Banner)" class="img-thumbnail w-100 custom-thumbnail" alt="Travel Thumbnail" />
+        </div>
+
+        <div class="col-md-6">
+            <div class="h-100 d-flex flex-column justify-content-between">
+                <div class="card border p-4">
+                    <div class="card-header text-center">
+                        <h3>Key points</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="border p-4 m-2 rounded"><strong>Trip Name:</strong> @Model.TripName</div>
+                                <div class="border p-4 m-2 rounded"><strong>Initial Budget:</strong> @Model.InicialBudget</div>
+                                <div class="border p-4 m-2 rounded"><strong>Category:</strong> @Model.Category</div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="border p-4 m-2 rounded"><strong>Transport:</strong> @Model.Transport</div>
+                                <div class="border p-4 m-2 rounded"><strong>Final Budget:</strong> @Model.FinalBudget</div>
+                                <div class="border p-4 m-2 rounded"><strong>Location:</strong> @Model.Location</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card border p-4 mt-4">
+                    <div class="card-header text-center">
+                        <h3>Description</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>@Model.Description</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <section id="userSection" class="text-center mt-5 mb-5">
+        <div class="row">
+            <div class="col-lg-4 mb-5 mb-lg-0 position-relative">
+                @if (Model.User != null)
+                {
+                    <div class="border p-4 m-2 rounded"><strong>Age:</strong> @Model.User.Age</div>
+                    <div class="border p-4 m-2 rounded"><strong>Gender:</strong> @Model.User.Gender</div>
+                    <div class="border p-4 m-2 rounded"><strong>Nationality:</strong> @Model.User.Nationality</div>
+                }
+                <div class="vr vr-blurry position-absolute my-0 h-100 d-none d-lg-block top-0 end-0"></div>
+            </div>
+
+            <div class="col-lg-4 mb-5 mb-lg-0 position-relative d-flex justify-content-center align-items-center">
+                <div class="text-center">
+                    <img src="https://mdbcdn.b-cdn.net/img/new/avatars/2.webp" class="rounded-circle shadow-4" style="width: 150px;" alt="Avatar" />
+                    <h4 class="mt-3 tracking-wide"><strong>@Model.User.Name</strong></h4>
+                    <h5 class="mt-3 tracking-wider font-italic">
+                        @if (!string.IsNullOrEmpty(Model.User.Quote))
+                        {
+                            <text>"@Model.User.Quote"</text>
+                        }
+                    </h5>
+                </div>
+                <div class="vr vr-blurry position-absolute my-0 h-100 d-none d-lg-block top-0 end-0"></div>
+            </div>
+
+            <div class="col-lg-4 position-relative">
+                <div>
+                    <h3 class="p-2 m-2"><strong>Trips created by</strong></h3>
+                    <a href="@Url.Action("UserTravels", "Trips", new { id = Model.User.Id })" style="text-decoration: none; color: inherit;">
+                        <p role="button" class="font-weight-bold h2 mt-4">2</p>
+                    </a>
+                </div>
+                <div class="vr vr-blurry position-absolute my-0 h-100 d-none d-lg-block top-0 end-0"></div>
+            </div>
+        </div>
+    </section>
+
+    <div class="d-grid gap-2 col-4 mx-auto mb-4">
+        <button onclick="handleGroupAdd()" type="button" class="btn btn-success btn-rounded p-2">Click to enter in the travel group</button>
+    </div>
+</div>
+
+<style>
+    .custom-thumbnail {
+        max-height: 700px;
+    }
+</style>

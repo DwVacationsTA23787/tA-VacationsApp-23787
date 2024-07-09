@@ -28,8 +28,19 @@ namespace Dw23787.Controllers
         // GET: Trips
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.Trips.Include(t => t.Group).Include(t => t.User);
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Users user = _context.UsersApp.FirstOrDefault(u => u.UserID == userId);
+
+            if(user.isAdmin == false)
+            {
+            var applicationDbContext = _context.Trips.Where(t => t.UserFK == user.Id).Include(t => t.Group).Include(t => t.User);
             return View(await applicationDbContext.ToListAsync());
+
+            }
+
+            var applicationDbContexts = _context.Trips.Include(t => t.Group).Include(t => t.User);
+            return View(await applicationDbContexts.ToListAsync());
+
         }
 
         // GET: Trips/Details/5
@@ -280,6 +291,13 @@ namespace Dw23787.Controllers
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+
+        public async Task<IActionResult> UserTravels(string id)
+        {
+
+            return View("UserTravels"); // Ensure "UserTravels" is the correct name of your view
         }
 
         private bool TripsExists(string id)

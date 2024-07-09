@@ -1,11 +1,14 @@
 ﻿using Dw23787.Data;
 using Dw23787.Models;
 using Dw23787.Models.dto;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Linq;
+using System.Reflection;
+using System.Security.Claims;
 using static Dw23787.Models.Trips;
 
 namespace Dw23787.Controllers.API
@@ -20,15 +23,19 @@ namespace Dw23787.Controllers.API
 
         public SignInManager<IdentityUser> _signInManager;
 
+        private readonly IWebHostEnvironment _webHostEnvironment;
 
-        public V1(ApplicationDbContext applicationDbContext, SignInManager<IdentityUser> signInManager, UserManager<IdentityUser> userManager)
+
+        public V1(ApplicationDbContext applicationDbContext, SignInManager<IdentityUser> signInManager, UserManager<IdentityUser> userManager, IWebHostEnvironment webHostEnvironment)
         {
             _Context = applicationDbContext;
             _signInManager = signInManager;
             _userManager = userManager;
+            _webHostEnvironment = webHostEnvironment;
         }
 
 
+        //Creates
 
         [HttpPost]
         [Route("Register")]
@@ -95,6 +102,132 @@ namespace Dw23787.Controllers.API
             }
         }
 
+
+        [HttpPost]
+        [Route("CreateTrip")]
+        public async Task<ActionResult> CreateTrip([FromQuery] int id, [FromForm] CreateTripDto tripDto, IFormFile banner)
+        {
+            try
+            {
+                // Get the user from UsersApp table based on UserID
+                Users user = await _Context.UsersApp.FirstOrDefaultAsync(u => u.Id == id);
+
+                if (user == null)
+                {
+                    return BadRequest("Please insert a valid user");
+                }
+
+                var trip = new Trips
+                {
+                    TripName = tripDto.TripName,
+                    Description = tripDto.Description,
+                    Location = tripDto.Location,
+                    Category = Enum.Parse<TripCategory>(tripDto.Category),
+                    Transport = Enum.Parse<TripTransport>(tripDto.Transport),
+                    InicialBudget = tripDto.InicialBudget,
+                    FinalBudget = tripDto.FinalBudget,
+                    UserFK = user.Id
+                };
+
+                // Assign the UserFK based on the found user's Id
+                trip.UserFK = user.Id;
+
+                // Create a new Group associated with the Trip
+                var newGroup = new Groups
+                {
+                    GroupId = Guid.NewGuid().ToString(), // Generate a new GUID for GroupId
+                    Name = trip.TripName // Set the group name (adjust as needed)
+                };
+
+                // Associate the new Group with the Trip
+                trip.Group = newGroup;
+
+                // Generate a GUID for the trip
+                trip.Id = Guid.NewGuid().ToString();
+
+                // vars aux
+                string nomeImagem = "";
+                bool haImagem = false;
+
+                // Handle banner file
+                if (banner == null || banner.Length == 0)
+                {
+                    return BadRequest("Please insert a Banner");
+                }else
+                {
+                    // verify MIME types
+                    if (!(banner.ContentType == "image/png" ||
+                        banner.ContentType == "image/jpeg"))
+                    {
+                        trip.Banner = "default.webp";
+                    }
+                    else
+                    {
+                        haImagem = true;
+
+                        Guid g = Guid.NewGuid();
+                        nomeImagem = g.ToString();
+                        string extensaoImagem = Path.GetExtension(banner.FileName).ToLowerInvariant();
+                        nomeImagem += extensaoImagem;
+                        trip.Banner = nomeImagem;
+                    }
+                }
+
+             
+
+                // Add the trip and the associated group to the context
+                _Context.Trips.Add(trip);
+
+                //newgroup e  user
+
+                Users_Groups user_groups = new Users_Groups();
+
+                user_groups.UserFK = user.Id;
+
+                user_groups.GroupFK = newGroup.GroupId;
+
+                _Context.Add(user_groups);
+
+                // Save changes to the database to ensure trips.Id is generated
+                await _Context.SaveChangesAsync();
+
+                if (haImagem)
+                {
+                    // encolher a imagem ao tamanho certo --> fazer pelos alunos
+                    // procurar no NuGet
+
+                    // determinar o local de armazenamento da imagem
+                    string localizacaoImagem = _webHostEnvironment.WebRootPath;
+                    // adicionar à raiz da parte web, o nome da pasta onde queremos guardar as imagens
+                    localizacaoImagem = Path.Combine(localizacaoImagem, "images");
+
+                    // será que o local existe?
+                    if (!Directory.Exists(localizacaoImagem))
+                    {
+                        Directory.CreateDirectory(localizacaoImagem);
+                    }
+
+                    // atribuir ao caminho o nome da imagem
+                    localizacaoImagem = Path.Combine(localizacaoImagem, nomeImagem);
+
+                    // guardar a imagem no Disco Rígido
+                    using var stream = new FileStream(
+                       localizacaoImagem, FileMode.Create
+                       );
+                    await banner.CopyToAsync(stream);
+                }
+
+                return Ok("Trip created successfully");
+            }
+            catch (DbUpdateException ex)
+            {
+                return BadRequest("Database update error occurred");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest("An error occurred while creating the trip");
+            }
+        }
 
 
         [HttpGet]
@@ -276,6 +409,7 @@ namespace Dw23787.Controllers.API
                 InicialBudget = trip.InicialBudget,
                 FinalBudget = trip.FinalBudget,
                 Banner = trip.Banner,
+                Location = trip.Location,
                 Closed = trip.Closed,
                 GroupId = trip.GroupId,
                 User = new UserDto
@@ -284,6 +418,7 @@ namespace Dw23787.Controllers.API
                     Name = trip.User.Name,
                     Age = trip.User.Age,
                     Gender = trip.User.Gender,
+                    Nationality = trip.User.Nationality,
                     ProfilePicture = trip.User.ProfilePicture,
                     DataNascimento = trip.User.DataNascimento,
                     Quote = trip.User.Quote
@@ -446,11 +581,23 @@ namespace Dw23787.Controllers.API
                 return NotFound();
             }
 
-            var tripsList = await _Context.Trips
+
+            if(user.isAdmin == false)
+            {
+
+               var tripsList = await _Context.Trips
                                .Where(t => t.UserFK == id)
                                .ToListAsync();
+                return Ok(tripsList);
 
-            return Ok(tripsList);
+            }
+            else
+            {
+                var tripsList = await _Context.Trips
+                              .ToListAsync();
+
+                return Ok(tripsList);
+            }
         }
 
 
@@ -470,6 +617,9 @@ namespace Dw23787.Controllers.API
                 return NotFound();
             }
 
+            if (user.isAdmin == false)
+            {
+
             // Retrieve all groups where the user is an admin
             var adminGroups = await _Context.GroupAdmins
                 .Where(ug => ug.UserFK == id && ug.UserAdmin)
@@ -487,8 +637,21 @@ namespace Dw23787.Controllers.API
                 })
                 .ToListAsync();
 
+                return Ok(groupsWithUserCount);
+            }
+            else
+            {
+                var groups = await _Context.Groups
+                .Select(g => new
+                {
+                    GroupId = g.GroupId,
+                    GroupName = g.Name,
+                    UserCount = _Context.GroupAdmins.Count(ug => ug.GroupFK == g.GroupId)
+                })
+                .ToListAsync();
 
-            return Ok(groupsWithUserCount);
+                return Ok(groups);
+            }
         }
 
 

@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Dw23787.Data;
 using Dw23787.Models;
 using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Dw23787.Controllers
 {
@@ -25,6 +26,25 @@ namespace Dw23787.Controllers
         // GET: Groups
         public async Task<IActionResult> Index()
         {
+            string userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            Users user = _context.UsersApp.FirstOrDefault(u => u.UserID == userId);
+
+            if(user.isAdmin == false)
+            {
+                // Retrieve all groups where the user is an admin
+                var adminGroups = await _context.GroupAdmins
+                    .Where(ug => ug.UserFK == user.Id && ug.UserAdmin)
+                    .Select(ug => ug.GroupFK)
+                    .ToListAsync();
+
+                // Query to get groups with the count of users in each group
+                var groups = await _context.Groups
+                    .Where(g => adminGroups.Contains(g.GroupId))
+                    .ToListAsync();
+
+                return View(groups);
+            }
+
             return View(await _context.Groups.ToListAsync());
         }
 

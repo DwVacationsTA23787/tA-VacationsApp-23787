@@ -9,6 +9,7 @@ namespace Dw23787.Models
         {
             TripList = new HashSet<Trips>();
             MessagesList = new HashSet<Messages>();
+            isAdmin = false;
         }
 
         [Key] // Identifica que é o atributo será PK
@@ -30,6 +31,8 @@ namespace Dw23787.Models
         public string Nationality { get; set; }
 
         public string? ProfilePicture { get; set; }
+
+        public Boolean isAdmin { get; set; }
 
 
 
