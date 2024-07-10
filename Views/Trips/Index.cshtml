@@ -83,8 +83,8 @@
             <td>
                 @Html.DisplayFor(modelItem => item.FinalBudget)
             </td>
-            <td>
-                <img src="~/images/@item.Banner" alt="Trip Banner" style="height:50px; width:auto;" />
+            <td style="max-width: 150px;">
+                <img src="~/images/@item.Banner" alt="Trip Banner" style="height:50px; max-width: 150px;" />
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Closed)
