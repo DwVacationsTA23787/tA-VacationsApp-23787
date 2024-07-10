@@ -1,4 +1,7 @@
 ﻿@model Dw23787.Models.dto.TripDto
+@using Dw23787.Data
+@using System.Security.Claims
+@inject ApplicationDbContext _context
 
 @{
     ViewData["Title"] = "Travel Details";
@@ -80,7 +83,10 @@
                 <div>
                     <h3 class="p-2 m-2"><strong>Trips created by</strong></h3>
                     <a href="@Url.Action("UserTravels", "Trips", new { id = Model.User.Id })" style="text-decoration: none; color: inherit;">
-                        <p role="button" class="font-weight-bold h2 mt-4">2</p>
+                        @{
+                            var nTrips = _context.Trips.Where(t => t.UserFK == Model.User.Id).Count();
+                        }
+                        <p role="button" class="font-weight-bold h2 mt-4">@nTrips</p>
                     </a>
                 </div>
                 <div class="vr vr-blurry position-absolute my-0 h-100 d-none d-lg-block top-0 end-0"></div>
