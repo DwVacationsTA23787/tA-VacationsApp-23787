@@ -20,7 +20,7 @@ namespace Dw23787.Models
 
         public string Description { get; init; }
 
-        public string? Photo { get; init; } // o '?' vai tornar o atributo em preenchimento facultativo
+        public string? Photo { get; set; }
 
         [NotMapped]
         public string FormattedTime => $"{Time.ToString("hh:mm tt")} | {Time.ToString("MMM dd")}";

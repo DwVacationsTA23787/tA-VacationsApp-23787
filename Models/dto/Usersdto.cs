@@ -20,5 +20,7 @@
         public string? ProfilePicture { get; set; }
 
         public string Quote { get; set; }
+
+        public Boolean isAdmin { get; set; }
     }
 }

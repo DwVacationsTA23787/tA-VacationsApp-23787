@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.IdentityModel.Tokens;
 using System.Linq;
 using System.Reflection;
@@ -22,7 +23,7 @@ namespace Dw23787.Controllers.API
         public UserManager<IdentityUser> _userManager;
 
         public SignInManager<IdentityUser> _signInManager;
-
+        private IIncludableQueryable<Trips, Users> tripsQuery;
         private readonly IWebHostEnvironment _webHostEnvironment;
 
 
@@ -35,7 +36,7 @@ namespace Dw23787.Controllers.API
         }
 
 
-        //Creates
+        // -------------------------- Creates ---------------------------------------------
 
         [HttpPost]
         [Route("Register")]
@@ -155,7 +156,7 @@ namespace Dw23787.Controllers.API
 
         [HttpPost]
         [Route("CreateTrip")]
-        public async Task<ActionResult> CreateTrip([FromQuery] int id, [FromForm] CreateTripDto tripDto, IFormFile banner)
+        public async Task<ActionResult> CreateTrip([FromQuery] int id, [FromForm] CreateTripDto tripDto, IFormFile? banner)
         {
             try
             {
@@ -202,8 +203,9 @@ namespace Dw23787.Controllers.API
                 // Handle banner file
                 if (banner == null || banner.Length == 0)
                 {
-                    return BadRequest("Please insert a Banner");
-                }else
+                    trip.Banner = "default.webp";
+                }
+                else
                 {
                     // verify MIME types
                     if (!(banner.ContentType == "image/png" ||
@@ -228,7 +230,7 @@ namespace Dw23787.Controllers.API
                 // Add the trip and the associated group to the context
                 _Context.Trips.Add(trip);
 
-                //newgroup e  user
+                //newgroup and  user
 
                 Users_Groups user_groups = new Users_Groups();
 
@@ -238,7 +240,7 @@ namespace Dw23787.Controllers.API
 
                 _Context.Add(user_groups);
 
-                // Save changes to the database to ensure trips.Id is generated
+                // Save changes to the database.
                 await _Context.SaveChangesAsync();
 
                 if (haImagem)
@@ -267,7 +269,7 @@ namespace Dw23787.Controllers.API
                     await banner.CopyToAsync(stream);
                 }
 
-                return Ok("Trip created successfully");
+                return Ok();
             }
             catch (DbUpdateException ex)
             {
@@ -279,6 +281,10 @@ namespace Dw23787.Controllers.API
             }
         }
 
+
+        // -------------------------------------- Creates ------------------------------
+
+        // ------------------------------------ LOGIN GETS ----------------------------------
 
         [HttpGet]
         [Route("LogIn")]
@@ -314,6 +320,8 @@ namespace Dw23787.Controllers.API
                                 DataNascimento = user.DataNascimento,
                                 Phone = user.Phone,
                                 Name = user.Name,
+                                Nationality = user.Nationality,
+                                isAdmin = user.isAdmin,
                                 ProfilePicture = user.ProfilePicture,
                                 Quote = user.Quote,
                             };
@@ -426,9 +434,6 @@ namespace Dw23787.Controllers.API
 
             return Ok(response);
         }
-
-
-
 
 
         [HttpGet]
@@ -564,6 +569,7 @@ namespace Dw23787.Controllers.API
                     DataNascimento = user.DataNascimento,
                     Phone = user.Phone,
                     Name = user.Name,
+                    Nationality = user.Nationality,
                     ProfilePicture = user.ProfilePicture,
                     Quote = user.Quote,
                 };
@@ -573,81 +579,6 @@ namespace Dw23787.Controllers.API
 
             return BadRequest("User not found");
 
-        }
-
-        [HttpPost]
-        [Route("UpdateUser/{id}")]
-        public IActionResult UpdateUser(int id, [FromBody] Usersdto updatedUserDto)
-        {
-            try
-            {
-                if (id <= 0 || updatedUserDto == null)
-                {
-                    return BadRequest("Invalid user ID or data.");
-                }
-
-                Users user = _Context.UsersApp.FirstOrDefault(u => u.Id == id);
-
-                if (user == null)
-                {
-                    return NotFound("User not found");
-                }
-
-                // Update user entity with updated data
-                user.Age = updatedUserDto.Age;
-                user.Email = updatedUserDto.Email;
-                user.Gender = updatedUserDto.Gender;
-                user.DataNascimento = updatedUserDto.DataNascimento;
-                user.Phone = updatedUserDto.Phone;
-                user.Name = updatedUserDto.Name;
-                user.ProfilePicture = updatedUserDto.ProfilePicture;
-                user.Quote = updatedUserDto.Quote;
-
-                _Context.UsersApp.Update(user);
-                _Context.SaveChanges();
-
-                return Ok("User updated successfully");
-            }
-            catch (Exception ex)
-            {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
-            }
-        }
-
-
-        [HttpGet]
-        [Route("GetAllTripsForUser")]
-        public async Task<ActionResult> GetAllTripsForUser([FromQuery] int id)
-        {
-            if (id <= 0)
-            {
-                return BadRequest("Invalid user ID.");
-            }
-
-            var user = await _Context.UsersApp.FirstOrDefaultAsync(u => u.Id == id);
-
-            if (user == null)
-            {
-                return NotFound();
-            }
-
-
-            if(user.isAdmin == false)
-            {
-
-               var tripsList = await _Context.Trips
-                               .Where(t => t.UserFK == id)
-                               .ToListAsync();
-                return Ok(tripsList);
-
-            }
-            else
-            {
-                var tripsList = await _Context.Trips
-                              .ToListAsync();
-
-                return Ok(tripsList);
-            }
         }
 
 
@@ -761,6 +692,371 @@ namespace Dw23787.Controllers.API
             return Ok("");
         }
 
+        [HttpPost]
+        [Route("AddMessageToGroup")]
+        public async Task<IActionResult> AddMessageToGroupAsync([FromForm] CreateMessageDto message, IFormFile? Picture)
+        {
+            if (message == null)
+            {
+                return BadRequest("Message is null.");
+            }
+            string nomeImagem = "";
+            bool haImagem = false;
+
+            if (Picture != null)
+            {
+                if (!(Picture.ContentType == "image/png" ||
+                                      Picture.ContentType == "image/jpeg"))
+                {
+                    message.Photo = "default.webp"; // set default user logo.
+                }
+                else
+                {
+                    haImagem = true;
+
+                    Guid g = Guid.NewGuid();
+                    nomeImagem = g.ToString();
+                    string extensaoImagem = Path.GetExtension(Picture.FileName).ToLowerInvariant();
+                    nomeImagem += extensaoImagem;
+                    message.Photo = nomeImagem;
+                }
+            }
+
+            Messages messages = new Messages
+            {
+               MessageTitle = message.MessageTitle,
+               Photo = message.Photo,
+               Time = message.Time,
+               Description = message.Description,
+               GroupFK = message.GroupFK,
+               UserFK = message.UserFK,
+            };
+
+            // Add logic to save the message to the database
+            _Context.Messages.Add(messages);
+            await _Context.SaveChangesAsync();
+
+            if (haImagem)
+            {
+                // encolher a imagem ao tamanho certo --> fazer pelos alunos
+                // procurar no NuGet
+
+                // determinar o local de armazenamento da imagem
+                string localizacaoImagem = _webHostEnvironment.WebRootPath;
+                // adicionar à raiz da parte web, o nome da pasta onde queremos guardar as imagens
+                localizacaoImagem = Path.Combine(localizacaoImagem, "images");
+
+                // será que o local existe?
+                if (!Directory.Exists(localizacaoImagem))
+                {
+                    Directory.CreateDirectory(localizacaoImagem);
+                }
+
+                // atribuir ao caminho o nome da imagem
+                localizacaoImagem = Path.Combine(localizacaoImagem, nomeImagem);
+
+                // guardar a imagem no Disco Rígido
+                using var stream = new FileStream(
+                   localizacaoImagem, FileMode.Create
+                   );
+                await Picture.CopyToAsync(stream);
+            }
+
+            return Ok(new { message = "Message added successfully.", messageId = messages.MessageId });
+        }
+
+
+        [HttpGet]
+        [Route("GetAllGroupsForUserMessage")]
+        public IActionResult GetAllGroupsForUserMessage([FromQuery] int userID)
+        {
+            var query = _Context.GroupAdmins
+                    .Where(ga => ga.UserFK == userID)
+                    .Join(
+                        _Context.Groups,
+                        ga => ga.GroupFK,
+                        g => g.GroupId,
+                        (ga, g) => new
+                        {
+                            GroupId = g.GroupId,
+                            GroupName = g.Name,
+                            LastMessage = _Context.Messages
+                                .Where(m => m.GroupFK == g.GroupId)
+                                .OrderByDescending(m => m.Time)
+                                .Select(m => new
+                                {
+                                    MessageTitle = m.MessageTitle,
+                                    Time = m.Time,
+                                    SenderName = _Context.UsersApp.FirstOrDefault(u => u.Id == m.UserFK).Name,
+                                    SenderAvatar = _Context.UsersApp.FirstOrDefault(u => u.Id == m.UserFK).ProfilePicture
+                                })
+                                .FirstOrDefault()
+                        })
+                    .ToList() // Materialize the query to a list
+                    .Select(result => new
+                    {
+            id = Guid.NewGuid().ToString(), // Generate new GUID for $id
+                        groupId = result.GroupId,
+                        groupName = result.GroupName,
+                        lastMessage = result.LastMessage != null ? new
+                        {
+                id = Guid.NewGuid().ToString(), // Generate new GUID for inner $id
+                            messageTitle = result.LastMessage.MessageTitle,
+                            senderAvatar = result.LastMessage.SenderAvatar,
+                            senderName = result.LastMessage.SenderName,
+                            time = result.LastMessage.Time.ToString("yyyy-MM-ddTHH:mm:ss")
+                        } : null
+                    });
+
+
+
+            return Ok(query);
+        }
+
+
+
+        [HttpGet]
+        [Route("GetAllTripsForReactUser")]
+        public async Task<IActionResult> GetTripsAsync([FromQuery] int id)
+        {
+            if (id <= 0)
+            {
+                return BadRequest("Invalid user ID.");
+            }
+
+            var user = await _Context.UsersApp.FirstOrDefaultAsync(u => u.Id == id);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+
+            if (user.isAdmin == false)
+            {
+
+                var tripsList = _Context.Trips.Where(t => t.UserFK == id).ToList();
+                return Ok(tripsList);
+
+            }
+            else
+            {
+                var tripsList = _Context.Trips.ToList();
+
+                return Ok(tripsList);
+            }
+        }
+
+
+        // ----------------------------  LOGIN GETS ----------------------------------------------
+
+        // ---------------------------- DELETE's -------------------------------------------------
+
+        [HttpDelete]
+        [Route("DeleteGroup")]
+        public async Task<IActionResult> DeleteGroupAsync([FromQuery] string groupId)
+        {
+            var group = await _Context.Groups.FindAsync(groupId);
+            if (group == null)
+            {
+                return NotFound(new { message = "Group not found" });
+            }
+
+            var tripExists = await _Context.Trips
+                                           .Where(t => t.GroupId == group.GroupId)
+                                           .FirstOrDefaultAsync();
+
+            if (tripExists != null)
+            {
+                return BadRequest(new { message = "To delete a group first delete the trip!" });
+            }
+
+            _Context.Groups.Remove(group);
+            await _Context.SaveChangesAsync();
+            return Ok(new { message = "Group deleted" });
+        }
+
+        [HttpDelete]
+        [Route("DeleteTrip")]
+        public async Task<IActionResult> DeleteTripAsync([FromQuery] string tripId)
+        {
+            var trips = await _Context.Trips.FindAsync(tripId);
+
+            if (trips == null)
+            {
+                return BadRequest("Trip not Found");
+            }
+
+            _Context.Trips.Remove(trips);
+            await _Context.SaveChangesAsync();
+            return Ok("Trip Deleted");
+        }
+
+
+        // ---------------------------- DELETE's -------------------------------------------------
+
+         
+        // -------------------------- UPDATE FUNCTIONS -------------------------------------------
+
+        [HttpPut]
+        [Route("UpdateTrip")]
+        public async Task<IActionResult> UpdateTripAsync([FromQuery]string id, [FromForm] CreateTripDto trip, IFormFile? Picture)
+        {
+            if (trip == null)
+            {
+                return BadRequest("Please insert a trip");
+            }
+
+            var tripold = _Context.Trips.FirstOrDefault(t => t.Id == id);
+
+            if (tripold == null)
+            {
+                return BadRequest("Trip not found to update");
+            }
+
+            tripold.TripName = trip.TripName;
+            tripold.Location = trip.Location;
+            tripold.InicialBudget = trip.InicialBudget;
+            tripold.FinalBudget = trip.FinalBudget;
+            tripold.Description = trip.Description;
+            tripold.Category = Enum.Parse<TripCategory>(trip.Category);
+            tripold.Transport = Enum.Parse<TripTransport>(trip.Transport);
+
+            string nomeImagem = "";
+            bool haImagem = false;
+
+            if (Picture == null || Picture.Length == 0)
+            {
+                tripold.Banner = trip.Banner;
+            }
+            else
+            {
+                // verify MIME types
+                if (!(Picture.ContentType == "image/png" ||
+                    Picture.ContentType == "image/jpeg"))
+                {
+                    tripold.Banner = trip.Banner;
+                }
+                else
+                {
+                    haImagem = true;
+
+                    Guid g = Guid.NewGuid();
+                    nomeImagem = g.ToString();
+                    string extensaoImagem = Path.GetExtension(Picture.FileName).ToLowerInvariant();
+                    nomeImagem += extensaoImagem;
+                    trip.Banner = nomeImagem;
+                }
+            }
+
+            _Context.Trips.Update(tripold);
+            _Context.SaveChanges();
+
+            if (haImagem)
+            {
+                // encolher a imagem ao tamanho certo --> fazer pelos alunos
+                // procurar no NuGet
+
+                // determinar o local de armazenamento da imagem
+                string localizacaoImagem = _webHostEnvironment.WebRootPath;
+                // adicionar à raiz da parte web, o nome da pasta onde queremos guardar as imagens
+                localizacaoImagem = Path.Combine(localizacaoImagem, "images");
+
+                // será que o local existe?
+                if (!Directory.Exists(localizacaoImagem))
+                {
+                    Directory.CreateDirectory(localizacaoImagem);
+                }
+
+                // atribuir ao caminho o nome da imagem
+                localizacaoImagem = Path.Combine(localizacaoImagem, nomeImagem);
+
+                // guardar a imagem no Disco Rígido
+                using var stream = new FileStream(
+                   localizacaoImagem, FileMode.Create
+                   );
+                await Picture.CopyToAsync(stream);
+            }
+            return Ok();
+        }
+
+
+        [HttpPost]
+        [Route("UpdateUser/{id}")]
+        public IActionResult UpdateUser(int id, [FromBody] Usersdto updatedUserDto)
+        {
+            try
+            {
+                if (id <= 0 || updatedUserDto == null)
+                {
+                    return BadRequest("Invalid user ID or data.");
+                }
+
+                Users user = _Context.UsersApp.FirstOrDefault(u => u.Id == id);
+
+                if (user == null)
+                {
+                    return NotFound("User not found");
+                }
+
+                // Update user entity with updated data
+                user.Age = updatedUserDto.Age;
+                user.Email = updatedUserDto.Email;
+                user.Gender = updatedUserDto.Gender;
+                user.DataNascimento = updatedUserDto.DataNascimento;
+                user.Phone = updatedUserDto.Phone;
+                user.Name = updatedUserDto.Name;
+                user.Quote = updatedUserDto.Quote;
+
+
+
+                _Context.UsersApp.Update(user);
+                _Context.SaveChanges();
+
+                return Ok("User updated successfully");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpPut]
+        [Route("UpdateGroup")]
+        public async Task<IActionResult> UpdateGroupAsync([FromQuery] string id, [FromForm] string GroupName)
+        {
+            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(GroupName))
+            {
+                return BadRequest("Group ID and Group Name are required.");
+            }
+
+            // Find the group by ID
+            var group = await _Context.Groups.FindAsync(id);
+            if (group == null)
+            {
+                return NotFound("Group not found.");
+            }
+
+            // Update the group's name
+            group.Name = GroupName;
+
+            try
+            {
+                // Save changes to the database
+                await _Context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                // Handle potential database update exceptions
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+
+            return Ok(new { message = "Group updated successfully.", groupId = group.GroupId, groupName = group.Name });
+        }
+
+
+        // -------------------------- UPDATE FUNCTIONS -------------------------------------------
+
         // Aux functions
 
         private string GetCategoryText(TripCategory category)
@@ -798,5 +1094,20 @@ namespace Dw23787.Controllers.API
                         return string.Empty;
                 }
             }
+
+
+
+        [HttpGet]
+        [Route("list")]
+        public IActionResult ListImages()
+        {
+            string localizacaoImagem = "https://dw2378720240712201935.azurewebsites.net/";
+            // adicionar à raiz da parte web, o nome da pasta onde queremos guardar as imagens
+            localizacaoImagem = Path.Combine(localizacaoImagem, "images");
+
+            return Ok(localizacaoImagem);
         }
+
+    }
+
     }

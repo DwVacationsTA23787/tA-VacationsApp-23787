@@ -4,6 +4,10 @@
     ViewData["Title"] = "Create";
 }
 
+
+
+<div class="container-fluid">
+
 <h1>Create Trip</h1>
 
 <hr />
@@ -12,19 +16,19 @@
         <form asp-action="Create" method="post" enctype="multipart/form-data">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
 
-            <div class="form-group">
+            <div class="form-group mb-2">
                 <label asp-for="TripName" class="control-label">Trip Name</label>
                 <input asp-for="TripName" class="form-control" />
                 <span asp-validation-for="TripName" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
+            <div class="form-group mb-2">
                 <label asp-for="Description" class="control-label">Description</label>
                 <textarea asp-for="Description" class="form-control" rows="4"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
+            <div class="form-group mb-2">
                 <label asp-for="Category" class="control-label">Category</label>
                 <select asp-for="Category" class="form-control">
                     @foreach (var category in Enum.GetValues(typeof(Dw23787.Models.Trips.TripCategory)))
@@ -35,7 +39,7 @@
                 <span asp-validation-for="Category" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
+            <div class="form-group mb-2">
                 <label asp-for="Transport" class="control-label">Transport</label>
                 <select asp-for="Transport" class="form-control">
                     @foreach (var transport in Enum.GetValues(typeof(Dw23787.Models.Trips.TripTransport)))
@@ -46,38 +50,41 @@
                 <span asp-validation-for="Transport" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
+            <div class="form-group mb-2">
                 <label asp-for="InicialBudget" class="control-label">Initial Budget</label>
                 <input asp-for="InicialBudget" class="form-control" type="number" />
                 <span asp-validation-for="InicialBudget" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
+            <div class="form-group mb-2">
                 <label asp-for="FinalBudget" class="control-label">Final Budget</label>
                 <input asp-for="FinalBudget" class="form-control" type="number" />
                 <span asp-validation-for="FinalBudget" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
+            <div class="form-group mb-2">
                 <label asp-for="Banner" class="control-label">Banner</label>
                 <input type="file" name="Banner" accept=".png, .jpg, .jpeg" asp-for="Banner" class="form-control" />
                 <span asp-validation-for="Banner" class="text-danger"></span>
             </div>
 
-            <div class="form-group">
-                <label asp-for="Location" class="control-label">Location</label>
-                <input asp-for="Location" class="form-control" />
-                <span asp-validation-for="Location" class="text-danger"></span>
-            </div>
+                <div class="form-group mb-2">
+                    <label asp-for="Location" class="control-label">Location</label>
+                    <select asp-for="Location" class="form-control" asp-items="ViewBag.Countries">
+                        <option value="">Select Country</option>
+                    </select>
+                    <span asp-validation-for="Location" class="text-danger"></span>
+                </div>
 
             <button type="submit" class="btn btn-primary">Create</button>
         </form>
     </div>
 </div>
-
 <div>
     <a asp-action="Index">Back to List</a>
 </div>
+</div>
+
 
 @section Scripts {
     @{

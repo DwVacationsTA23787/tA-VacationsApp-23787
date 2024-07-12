@@ -9,11 +9,16 @@
 <link rel="stylesheet" href="~/css/TravelCard.css" />
 
 <div class="container mt-4 d-flex flex-column min-vh-100 rounded" style="background-color: #f8f9fa;">
-    <div>
-        <p class="saudation-text">
-            Hi, @ViewData["UserName"]
-        </p>
-        <p class="saudation-subtext">Let's search for a new travel!</p>
+    <div class="d-flex justify-content-between">
+        <div class="d-flex flex-column">
+            <p class="saudation-text">
+                Hi, @ViewData["UserName"]
+            </p>
+            <p class="saudation-subtext">Let's search for a new travel!</p>
+        </div>
+        <button type="button" class="btn btn-success" style="height: 40px; width: 40px;" onclick="location.href='@Url.Action("Create", "Trips")'">
+            +
+        </button>
     </div>
 
     @using (Html.BeginForm("Search", "Home", FormMethod.Post))

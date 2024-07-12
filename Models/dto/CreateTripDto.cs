@@ -11,5 +11,7 @@
         public string InicialBudget { get; set; }
         public string FinalBudget { get; set; }
 
+        public string? Banner { get; set; }
+
     }
 }

@@ -17,6 +17,9 @@
     @if (@user.isAdmin != true)
     {
         <h1>Trips Created By @user.Name</h1>
+        <p>
+            <a class="btn btn-success" asp-action="Create">Create New</a>
+        </p>
     }
     else
     {
