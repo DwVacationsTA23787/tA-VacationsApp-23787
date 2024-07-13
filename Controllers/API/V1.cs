@@ -8,9 +8,12 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Query;
 using Microsoft.IdentityModel.Tokens;
 using System.Linq;
+using System.Net.Mail;
+using System.Net;
 using System.Reflection;
 using System.Security.Claims;
 using static Dw23787.Models.Trips;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 
 namespace Dw23787.Controllers.API
 {
@@ -40,7 +43,7 @@ namespace Dw23787.Controllers.API
 
         [HttpPost]
         [Route("Register")]
-        public async Task<ActionResult> CreateUser([FromForm] Users user, IFormFile profilePicture)
+        public async Task<ActionResult> CreateUser([FromForm] Users user, IFormFile? profilePicture)
         {
             if (user == null)
             {
@@ -61,7 +64,7 @@ namespace Dw23787.Controllers.API
                     UserName = user.Email,
                     Email = user.Email,
                     Id = Guid.NewGuid().ToString(),
-                    EmailConfirmed = true
+                    //EmailConfirmed = false
                 };
 
                 var result = await _userManager.CreateAsync(newUser, user.Password);
@@ -100,7 +103,7 @@ namespace Dw23787.Controllers.API
                     if (!(profilePicture.ContentType == "image/png" ||
                                           profilePicture.ContentType == "image/jpeg"))
                     {
-                        userApp.ProfilePicture = "default.webp"; // set default user logo.
+                        userApp.ProfilePicture = "profile.jpeg"; // set default user logo.
                     }
                     else
                     {
@@ -113,11 +116,20 @@ namespace Dw23787.Controllers.API
                         userApp.ProfilePicture = nomeImagem;
                     }
                 }
+                else
+                {
+                    userApp.ProfilePicture = "profile.jpeg";
+                }
 
 
                 _Context.UsersApp.Add(userApp);
 
                 await _Context.SaveChangesAsync(); // Completes the transaction
+
+                string emailBody = $"<p>Please confirm your email by clicking the link below:</p>" +
+                   $"<a href='https://dw2378720240712201935.azurewebsites.net/api/v1/ConfirmEmail/{userApp.Email}'>Confirm Email</a>";
+
+                await SendEmailAsync(userApp.Email, "Confirm Email", emailBody);
 
                 if (haImagem)
                 {
@@ -297,6 +309,11 @@ namespace Dw23787.Controllers.API
 
                 if (resultUser != null)
                 {
+
+                    if(resultUser.EmailConfirmed == false)
+                    {
+                        return BadRequest("Please Confirm Email First");
+                    }
 
                     PasswordVerificationResult passWorks = new PasswordHasher<IdentityUser>().VerifyHashedPassword(resultUser, resultUser.PasswordHash, password);
 
@@ -835,13 +852,40 @@ namespace Dw23787.Controllers.API
             if (user.isAdmin == false)
             {
 
-                var tripsList = _Context.Trips.Where(t => t.UserFK == id).ToList();
+                var tripsList = _Context.Trips
+                                    .Where(t => t.UserFK == id)
+                                    .Select(t => new {
+                                        t.Id,
+                                        t.TripName,
+                                        t.Description,
+                                        t.Location,
+                                        Category = t.Category.ToString(), 
+                                        Transport = t.Transport.ToString(),
+                                        t.InicialBudget,
+                                        t.FinalBudget,
+                                        t.Banner,
+                                        t.Closed
+                                    })
+                                    .ToList();
                 return Ok(tripsList);
 
             }
             else
             {
-                var tripsList = _Context.Trips.ToList();
+                var tripsList = _Context.Trips
+                                    .Select(t => new {
+                                        t.Id,
+                                        t.TripName,
+                                        t.Description,
+                                        t.Location,
+                                        Category = t.Category.ToString(),
+                                        Transport = t.Transport.ToString(),
+                                        t.InicialBudget,
+                                        t.FinalBudget,
+                                        t.Banner,
+                                        t.Closed
+                                    })
+                                    .ToList();
 
                 return Ok(tripsList);
             }
@@ -1094,6 +1138,66 @@ namespace Dw23787.Controllers.API
                         return string.Empty;
                 }
             }
+
+
+        private async Task<bool> SendEmailAsync(string email, string subject, string confirmLink)
+        {
+            try
+            {
+                MailMessage message = new MailMessage();
+                SmtpClient smtpClient = new SmtpClient();
+                message.From = new MailAddress("inmyridedoyouwannajump@gmail.com");
+                message.To.Add(email);
+                message.Subject = subject;
+                message.IsBodyHtml = true;
+                message.Body = confirmLink;
+
+                smtpClient.Port = 587;
+                smtpClient.Host = "sandbox.smtp.mailtrap.io";
+
+                smtpClient.EnableSsl = true;
+                smtpClient.UseDefaultCredentials = false;
+                smtpClient.Credentials = new NetworkCredential("bfdc151e5c7f3a", "f89c53b55e6c5d");
+                smtpClient.DeliveryMethod = SmtpDeliveryMethod.Network;
+                smtpClient.Send(message);
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                return false;
+            }
+
+        }
+
+        [HttpGet]
+        [Route("ConfirmEmail/{Email}")]
+        public async Task<IActionResult> ConfirmEmail([FromRoute] string Email)
+        {
+            if (string.IsNullOrWhiteSpace(Email))
+            {
+                return BadRequest("Email parameter is required.");
+            }
+
+            IdentityUser user = await _userManager.FindByEmailAsync(Email);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            user.EmailConfirmed = true;
+
+            var updateResult = await _userManager.UpdateAsync(user);
+            if (!updateResult.Succeeded)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Fail to confirm.");
+            }
+
+            await _Context.SaveChangesAsync();
+
+            return Redirect("http://localhost:3000/Login"); // to Change
+        }
 
 
 

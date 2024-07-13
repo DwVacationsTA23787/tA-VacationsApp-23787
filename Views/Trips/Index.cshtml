@@ -53,6 +53,9 @@
             <th>
                 @Html.DisplayNameFor(model => model.Banner)
             </th>
+             <th>
+                @Html.DisplayNameFor(model => model.Location)
+            </th>
             <th>
                 @Html.DisplayNameFor(model => model.Closed)
             </th>
@@ -88,6 +91,9 @@
             </td>
             <td style="max-width: 150px;">
                 <img src="~/images/@item.Banner" alt="Trip Banner" style="height:50px; max-width: 150px;" />
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Location)
             </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Closed)

@@ -2,29 +2,21 @@
 // The .NET Foundation licenses this file to you under the MIT license.
 #nullable disable
 
-using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
 using System.Net;
 using System.Net.Mail;
-using System.Reflection;
 using System.Text;
 using System.Text.Encodings.Web;
-using System.Threading;
-using System.Threading.Tasks;
+using Dw23787.CustomValidators;
 using Dw23787.Data;
 using Dw23787.Models;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.Extensions.Logging;
-using SQLitePCL;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Dw23787.Areas.Identity.Pages.Account
@@ -109,8 +101,8 @@ namespace Dw23787.Areas.Identity.Pages.Account
             ///     directly from your code. This API may change or be removed in future releases.
             /// </summary>
             [DataType(DataType.Password)]
-            [Display(Name = "Confirm password")]
             [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+            [Display(Name = "Confirm password")]
             public string ConfirmPassword { get; set; }
 
             [Required(ErrorMessage = "Name is required")]
@@ -119,14 +111,17 @@ namespace Dw23787.Areas.Identity.Pages.Account
 
             [Required(ErrorMessage = "Birthdate is required")]
             [DataType(DataType.Date)]
+            [CustomBirthdateValidator(ErrorMessage = "The age must be at least 16 years old.")]
             [Display(Name = "Birthdate")]
             public DateOnly DataNascimento { get; set; }
 
             [Required(ErrorMessage = "Phone is required")]
+            [RegularExpression("([+]|00)?[0-9]{6,17}", ErrorMessage = "o {0} just can contain digits. At least 6.")]
             [Display(Name = "Phone")]
             public string Phone { get; set; }
 
             [Required(ErrorMessage = "Gender is required")]
+            [RegularExpression("^(Male|Female|Non-binary|male|female|non-binary)$", ErrorMessage = "Gender must be either Male, Female, or Non-binary")]
             [Display(Name = "Gender")]
             public string Gender { get; set; }
 
@@ -136,6 +131,7 @@ namespace Dw23787.Areas.Identity.Pages.Account
             public string Nacionality { get; set; }
 
             [Required(ErrorMessage = "Please Write a little quote about yourself")]
+            [StringLength(250, ErrorMessage = "The quote must be between {2} and {1} characters long.", MinimumLength = 10)]
             [Display(Name = "Quote")]
             public string Quote { get; set; }
 
@@ -161,6 +157,11 @@ namespace Dw23787.Areas.Identity.Pages.Account
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
+
+            if (!validateBirth(Input.DataNascimento)){
+                ModelState.AddModelError("Input.DataNascimento", "The age as to be at least 16 years old");
+                return Page();
+            }
 
             if (ModelState.IsValid)
             {
@@ -360,5 +361,25 @@ namespace Dw23787.Areas.Identity.Pages.Account
             }
             return (IUserEmailStore<IdentityUser>)_userStore;
         }
+
+        private bool validateBirth(DateOnly date)
+        {
+
+            DateOnly birthDate = date;
+            DateOnly today = DateOnly.FromDateTime(DateTime.Today);
+            int age = today.Year - birthDate.Year;
+
+            if (age < 16)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
     }
+
+
+
+
 }
