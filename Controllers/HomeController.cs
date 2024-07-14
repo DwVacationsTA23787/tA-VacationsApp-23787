@@ -23,6 +23,13 @@ namespace Dw23787.Controllers
             _Context = applicationDbContext;
         }
 
+
+        /// <summary>
+        /// Case User is logged:
+        //     1. Valid :  Gets trips for the user
+        //     2. Invalid : Returns counts of users and trips. 
+        /// </summary>
+        /// <returns>View</returns>
         public async Task<IActionResult> Index()
         {
 
@@ -45,7 +52,13 @@ namespace Dw23787.Controllers
 
         }
 
-
+        
+        /// <summary>
+        /// Function to enable search trough trips.
+        /// </summary>
+        /// <param name="searchText"></param>
+        /// <param name="category"></param>
+        /// <returns>View()</returns>
         [HttpPost]
         public async Task<ActionResult> SearchAsync(string searchText, string category)
         {

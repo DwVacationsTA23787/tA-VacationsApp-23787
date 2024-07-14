@@ -6,10 +6,12 @@ using Dw23787.Models;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Primitives;
+using System.ComponentModel.DataAnnotations;
 
 namespace Dw23787.Controllers
 {
 
+    // Authorize to acces only if user is logged in.
     [Authorize]
     public class TripsController : Controller
     {
@@ -27,6 +29,14 @@ namespace Dw23787.Controllers
         }
 
         // GET: Trips
+        /// <summary>
+        /// Function To get List of trips for user
+        /// Case the user is admin:
+        ///     1. Returns all the trips.
+        /// Case the user is not admin:
+        ///     1. Returns all the trips except the trips created by the user.
+        /// </summary>
+        /// <returns></returns>
         public async Task<IActionResult> Index()
         {
             //ViewData["ActivePage"] = "Trips";
@@ -276,6 +286,25 @@ namespace Dw23787.Controllers
         // POST: Trips/Create
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        /// <summary>
+        /// Creates a Trip with picture
+        /// 1. Validate TripName, Validate Description.
+        /// 2. Case atributtes dont pass the validation:
+        ///     Add modelState Error and return View();
+        /// 3. Case atributtes pass the validation:
+        ///     1. Parse the location choosed
+        ///     2. Get trip information
+        ///     3. Create Group.
+        ///     4. Add group Id created to the trip Group foreign key.
+        ///     5. Image name processing to add in trip banner.
+        ///     6. Add trip to DB.
+        ///     7. If Theres an Image:
+        ///         8. Save it in project folder images.
+        ///
+        /// </summary>
+        /// <param name="trips"></param>
+        /// <param name="Banner"></param>
+        /// <returns></returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("Id,TripName,Description,Category,Transport,InicialBudget,FinalBudget,Location,UserFK")] Trips trips, IFormFile? Banner)
@@ -838,6 +867,23 @@ namespace Dw23787.Controllers
         // POST: Trips/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        /// <summary>
+        /// Edit Function
+        /// 1. Validate TripName, Validate Description.
+        /// 2. Case atributtes dont pass the validation:
+        ///     Add modelState Error and return View();
+        /// 3. Case atributtes pass the validation:
+        ///     1. Parse the location choosed
+        ///     2. Get trip information
+        ///     3. Image name processing to add in trip banner.
+        ///     4. Update trip to DB.
+        ///     7. If Theres new Image:
+        ///         8. Save it in project folder images.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="trips"></param>
+        /// <param name="Banner"></param>
+        /// <returns></returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(string id, [Bind("Id,TripName,Description,Category,Transport,InicialBudget,FinalBudget,Closed, Location")] Trips trips, IFormFile? Banner)
@@ -1177,6 +1223,13 @@ namespace Dw23787.Controllers
         }
 
         // POST: Trips/Delete/5
+        /// <summary>
+        /// Delete Trip Function
+        /// 1. Check if trip exists with the ID passed
+        /// 2. If exist: Remove it from DB and save changes.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)
@@ -1192,7 +1245,11 @@ namespace Dw23787.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-
+        /// <summary>
+        /// Function Responsible to retreive the Travels for a specific user.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
         public async Task<IActionResult> UserTravels(string id)
         {
             int newId = int.Parse(id);
@@ -1210,6 +1267,8 @@ namespace Dw23787.Controllers
             return _context.Trips.Any(e => e.Id == id);
         }
 
+
+        // AUX Validation Functions
         private bool ValidateTripName(string tripName)
         {
             tripName = tripName.Trim();

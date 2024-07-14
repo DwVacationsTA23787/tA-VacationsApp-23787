@@ -28,7 +28,7 @@ namespace Dw23787.Controllers
 
             if (user.isAdmin == false)
             {
-                // Retrieve all groups where the user is an admin
+                // Retrieve all groups where the user is an admin from table GroupAdmins
                 var adminGroups = await _context.GroupAdmins
                     .Where(ug => ug.UserFK == user.Id && ug.UserAdmin)
                     .Select(ug => ug.GroupFK)
@@ -104,19 +104,29 @@ namespace Dw23787.Controllers
         // POST: Groups/Edit/5
         // To protect from overposting attacks, enable the specific properties you want to bind to.
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
+        // First check if groupId is passed 
+        /// <summary>
+        /// Edit function
+        /// 1. check if group exist with given id
+        ///     2. If not exist return not found.
+        /// 3. If exists:
+        ///     4. Update group.
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="group"></param>
+        /// <returns></returns>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(string id, [Bind("GroupId,Name")] Groups group)
         {
-
+            // check if groupId is passed
             if (id != group.GroupId)
             {
                 return NotFound();
             }
 
                 try
-                {
-                    // Attach the entity and set its state to Modified
+                {    
                     _context.Entry(group).State = EntityState.Modified;
                     await _context.SaveChangesAsync();
                 }
@@ -155,6 +165,10 @@ namespace Dw23787.Controllers
         }
 
         // POST: Groups/Delete/5
+        // 1.Find Group if null return not found
+        // 2.Try to find trip with the group id passed
+        //  3.case find return model state error
+        //  4.case not found remove group from DB.
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(string id)

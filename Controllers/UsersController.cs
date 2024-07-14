@@ -15,7 +15,7 @@ using System.Text.RegularExpressions;
 
 namespace Dw23787.Controllers
 {
-
+    // Authorize to acces only if user is logged in.
     [Authorize]
     public class UsersController : Controller
     {

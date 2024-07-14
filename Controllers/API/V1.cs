@@ -366,8 +366,6 @@ namespace Dw23787.Controllers.API
             }
         }
 
-
-
         [HttpGet]
         [Route("numUsers")]
         public ActionResult NumberUsers()
@@ -717,13 +715,13 @@ namespace Dw23787.Controllers.API
             {
                 return BadRequest("Message is null.");
             }
+
             string nomeImagem = "";
             bool haImagem = false;
 
             if (Picture != null)
             {
-                if (!(Picture.ContentType == "image/png" ||
-                                      Picture.ContentType == "image/jpeg"))
+                if (!(Picture.ContentType == "image/png" || Picture.ContentType == "image/jpeg"))
                 {
                     message.Photo = "default.webp"; // set default user logo.
                 }
@@ -741,12 +739,12 @@ namespace Dw23787.Controllers.API
 
             Messages messages = new Messages
             {
-               MessageTitle = message.MessageTitle,
-               Photo = message.Photo,
-               Time = message.Time,
-               Description = message.Description,
-               GroupFK = message.GroupFK,
-               UserFK = message.UserFK,
+                MessageTitle = message.MessageTitle,
+                Photo = message.Photo,
+                Time = message.Time,
+                Description = message.Description,
+                GroupFK = message.GroupFK,
+                UserFK = message.UserFK,
             };
 
             // Add logic to save the message to the database
@@ -755,28 +753,50 @@ namespace Dw23787.Controllers.API
 
             if (haImagem)
             {
-                // encolher a imagem ao tamanho certo --> fazer pelos alunos
-                // procurar no NuGet
-
-                // determinar o local de armazenamento da imagem
+                // Determine the storage location of the image
                 string localizacaoImagem = _webHostEnvironment.WebRootPath;
-                // adicionar à raiz da parte web, o nome da pasta onde queremos guardar as imagens
                 localizacaoImagem = Path.Combine(localizacaoImagem, "images");
 
-                // será que o local existe?
+                // Check if the location exists
                 if (!Directory.Exists(localizacaoImagem))
                 {
                     Directory.CreateDirectory(localizacaoImagem);
                 }
 
-                // atribuir ao caminho o nome da imagem
+                // Assign the path to the image name
                 localizacaoImagem = Path.Combine(localizacaoImagem, nomeImagem);
 
-                // guardar a imagem no Disco Rígido
-                using var stream = new FileStream(
-                   localizacaoImagem, FileMode.Create
-                   );
+                // Save the image to the disk
+                using var stream = new FileStream(localizacaoImagem, FileMode.Create);
                 await Picture.CopyToAsync(stream);
+            }
+
+            // Send email to all users in the group
+            var listUsers = _Context.GroupAdmins.Where(ga => ga.GroupFK == message.GroupFK).ToList();
+
+            if (listUsers.Count() > 0)
+            {
+                var group = _Context.Groups.FirstOrDefault(g => g.GroupId == message.GroupFK);
+
+                if (group != null)
+                {
+                    string subject = $"New Message in the group {group.Name}";
+                    string groupLink = $"http://localhost:3000/chat/{message.GroupFK}";
+                    string emailBody = $"<p>You have a new message in the group {group.Name}.</p>" +
+                                       $"<p>Click the link below to view the message:</p>" +
+                                       $"<a href='{groupLink}'>{groupLink}</a>";
+
+                    foreach (var user in listUsers)
+                    {
+                        var userSend = _Context.UsersApp.FirstOrDefault(u => u.Id == user.UserFK);
+                        if (userSend != null)
+                        {
+                            var email = userSend.Email;
+                            // Send notification to all users in the group
+                            await SendEmailAsync(email, subject, emailBody);
+                        }
+                    }
+                }
             }
 
             return Ok(new { message = "Message added successfully.", messageId = messages.MessageId });
@@ -891,6 +911,35 @@ namespace Dw23787.Controllers.API
             }
         }
 
+
+        [HttpGet]
+        [Route("GetGroupMessages")]
+        public async Task<IActionResult> GetGroupMessages([FromQuery] string groupId)
+        {
+            if (String.IsNullOrEmpty(groupId))
+            {
+                return BadRequest("Please insert groupId");
+            }
+
+            var messages = await _Context.Messages
+                                 .Include(m => m.User)
+                                 .Where(m => m.GroupFK == groupId)
+                                 .OrderBy(m => m.Time)
+                                 .Select(m => new
+                                 {
+                                     userProfilePicture = m.User.ProfilePicture,
+                                     userId = m.User.Id,
+                                     sender = m.User.Name,
+                                     time = m.FormattedTime,
+                                     content = m.Description,
+                                     Picture = m.Photo
+                                 })
+                                 .ToListAsync();
+
+
+            return Ok(messages);
+
+        }
 
         // ----------------------------  LOGIN GETS ----------------------------------------------
 

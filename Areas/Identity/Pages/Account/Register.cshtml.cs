@@ -154,6 +154,20 @@ namespace Dw23787.Areas.Identity.Pages.Account
             ExternalLogins = (await _signInManager.GetExternalAuthenticationSchemesAsync()).ToList();
         }
 
+        /// <summary>
+        /// This function is responsible for the user creation
+        /// 1. try to validate with the costum validator the field 'DataNascimento'
+        /// 2. if model state is valid
+        ///     3. Create identity user
+        ///     4. with identity user, create the userApp so it can be inserted on table UsersApp.
+        ///     5. Image name processing to add in user profilepicture.
+        ///     6. Add user to DB.
+        ///     7. If Theres an Image:
+        ///         8. Save it in project folder images.
+        ///     9. send user to email confirmation.
+        /// </summary>
+        /// <param name="returnUrl"></param>
+        /// <returns></returns>
         public async Task<IActionResult> OnPostAsync(string returnUrl = null)
         {
             returnUrl ??= Url.Content("~/");
@@ -305,6 +319,13 @@ namespace Dw23787.Areas.Identity.Pages.Account
         }
 
 
+        /// <summary>
+        /// Email sender function.
+        /// </summary>
+        /// <param name="email"></param>
+        /// <param name="subject"></param>
+        /// <param name="confirmLink"></param>
+        /// <returns></returns>
         private async Task<bool> SendEmailAsync(string email, string subject, string confirmLink)
         {
             try

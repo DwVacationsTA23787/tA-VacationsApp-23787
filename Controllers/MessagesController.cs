@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 
 namespace Dw23787.Controllers
 {
-
+    // Authorize to acces only if user is logged in.
     [Authorize]
     public class MessagesController : Controller
     {
